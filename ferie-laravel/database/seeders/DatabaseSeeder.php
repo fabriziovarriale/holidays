@@ -19,20 +19,17 @@ class DatabaseSeeder extends Seeder
 
         $this->call(LeaveTypeSeeder::class);
 
-        User::factory()->create([
-            'name' => 'Admin Bitboss',
-            'first_name' => 'Admin',
-            'last_name' => 'Bitboss',
-            'email' => 'admin@example.com',
-            'role' => 'admin',
-        ]);
-
-        User::factory()->create([
-            'name' => 'Fabrizio Bitboss',
-            'first_name' => 'Fabrizio',
-            'last_name' => 'Bitboss',
-            'email' => 'fabrizio@example.com',
-            'role' => 'user',
-        ]);
+        // Idempotente: crea l'admin solo se non esiste già
+        User::firstOrCreate(
+            ['email' => 'admin@ferie.it'],
+            [
+                'first_name' => 'Admin',
+                'last_name'  => 'Bitboss',
+                'password'   => bcrypt('Admin1234!'),
+                'role'       => 'admin',
+                'job_role'   => 'Socio',
+                'active'     => true,
+            ]
+        );
     }
 }
