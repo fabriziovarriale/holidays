@@ -21,6 +21,16 @@ export default function Users({ users, year }) {
         if (status === 'Utente creato.') setCreateSlideoverOpen(false);
     }, [status]);
 
+    // Auto-apre lo slideover dell'utente se passato come query param
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const openUserId = params.get('openUser');
+        if (openUserId) {
+            const user = users.find((u) => String(u.id) === openUserId);
+            if (user) setSelectedUser(user);
+        }
+    }, [users]);
+
     return (
         <AuthenticatedLayout
             header={

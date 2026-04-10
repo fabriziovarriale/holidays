@@ -6,7 +6,7 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import Select from '@/Components/Select';
 import TextInput from '@/Components/TextInput';
 import Textarea from '@/Components/Textarea';
-import { useForm, usePage } from '@inertiajs/react';
+import { Link, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef } from 'react';
 
 function workingDaysBetween(startDate, endDate) {
@@ -190,7 +190,21 @@ export default function LeaveRequestForm({
                         minDate={new Date(2020, 0, 1)}
                         required
                     />
-                    <InputError message={errors.startDate} className="mt-2" />
+                    {errors.startDate && (
+                        errors.startDate.includes('Budget ferie') && (isAdminUser || isAdmin) && data.userId ? (
+                            <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                                <span>Budget ferie non impostato per questo dipendente.{' '}</span>
+                                <Link
+                                    href={`${route('admin.users.index')}?openUser=${data.userId}`}
+                                    className="shrink-0 font-semibold underline hover:opacity-80"
+                                >
+                                    Imposta ora →
+                                </Link>
+                            </div>
+                        ) : (
+                            <InputError message={errors.startDate} className="mt-2" />
+                        )
+                    )}
                 </div>
                 <div>
                     <InputLabel htmlFor="endDate" value="Data fine" />
