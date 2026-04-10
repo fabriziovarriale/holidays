@@ -42,7 +42,7 @@ export default function ConfirmDialog({
                             <h3 className="mb-2 text-base font-semibold text-foreground">{title}</h3>
                         )}
                         {message && (
-                            <p className="text-sm text-muted-foreground">{message}</p>
+                            <div className="text-sm text-muted-foreground">{message}</div>
                         )}
 
                         <div className="mt-6 flex justify-end gap-3">

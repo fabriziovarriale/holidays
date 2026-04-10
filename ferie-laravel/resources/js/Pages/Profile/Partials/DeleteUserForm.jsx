@@ -1,120 +1,80 @@
-import DangerButton from '@/Components/DangerButton';
+import ConfirmDialog from '@/Components/ConfirmDialog';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
-import Modal from '@/Components/Modal';
-import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import { useForm } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
-export default function DeleteUserForm({ className = '' }) {
-    const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
+export default function DeleteUserForm() {
+    const [confirmOpen, setConfirmOpen] = useState(false);
     const passwordInput = useRef();
 
-    const {
-        data,
-        setData,
-        delete: destroy,
-        processing,
-        reset,
-        errors,
-        clearErrors,
-    } = useForm({
+    const { data, setData, delete: destroy, processing, reset, errors, clearErrors } = useForm({
         password: '',
     });
 
-    const confirmUserDeletion = () => {
-        setConfirmingUserDeletion(true);
-    };
-
-    const deleteUser = (e) => {
-        e.preventDefault();
-
+    const deleteUser = () => {
         destroy(route('profile.destroy'), {
             preserveScroll: true,
-            onSuccess: () => closeModal(),
-            onError: () => passwordInput.current.focus(),
+            onSuccess: () => { setConfirmOpen(false); },
+            onError: () => passwordInput.current?.focus(),
             onFinish: () => reset(),
         });
     };
 
     const closeModal = () => {
-        setConfirmingUserDeletion(false);
-
+        setConfirmOpen(false);
         clearErrors();
         reset();
     };
 
     return (
-        <section className={`space-y-6 ${className}`}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900">
-                    Delete Account
-                </h2>
-
-                <p className="mt-1 text-sm text-gray-600">
-                    Once your account is deleted, all of its resources and data
-                    will be permanently deleted. Before deleting your account,
-                    please download any data or information that you wish to
-                    retain.
+        <section>
+            <header className="mb-6">
+                <h3 className="text-base font-semibold text-foreground">Elimina account</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    Una volta eliminato, tutti i dati del tuo account verranno rimossi definitivamente.
                 </p>
             </header>
 
-            <DangerButton onClick={confirmUserDeletion}>
-                Delete Account
-            </DangerButton>
+            <button
+                type="button"
+                onClick={() => setConfirmOpen(true)}
+                className="inline-flex items-center rounded-md border border-destructive px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+            >
+                Elimina account
+            </button>
 
-            <Modal show={confirmingUserDeletion} onClose={closeModal}>
-                <form onSubmit={deleteUser} className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900">
-                        Are you sure you want to delete your account?
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-600">
-                        Once your account is deleted, all of its resources and
-                        data will be permanently deleted. Please enter your
-                        password to confirm you would like to permanently delete
-                        your account.
-                    </p>
-
-                    <div className="mt-6">
-                        <InputLabel
-                            htmlFor="password"
-                            value="Password"
-                            className="sr-only"
-                        />
-
-                        <TextInput
-                            id="password"
-                            type="password"
-                            name="password"
-                            ref={passwordInput}
-                            value={data.password}
-                            onChange={(e) =>
-                                setData('password', e.target.value)
-                            }
-                            className="mt-1 block w-3/4"
-                            isFocused
-                            placeholder="Password"
-                        />
-
-                        <InputError
-                            message={errors.password}
-                            className="mt-2"
-                        />
+            <ConfirmDialog
+                show={confirmOpen}
+                title="Elimina account"
+                destructive
+                processing={processing}
+                onConfirm={deleteUser}
+                onCancel={closeModal}
+                confirmLabel="Elimina definitivamente"
+                cancelLabel="Annulla"
+                message={
+                    <div className="space-y-3">
+                        <p className="text-sm text-muted-foreground">
+                            Questa operazione è irreversibile. Inserisci la tua password per confermare.
+                        </p>
+                        <div>
+                            <InputLabel htmlFor="delete_password" value="Password" className="sr-only" />
+                            <TextInput
+                                id="delete_password"
+                                type="password"
+                                ref={passwordInput}
+                                value={data.password}
+                                onChange={(e) => setData('password', e.target.value)}
+                                className="block w-full"
+                                placeholder="La tua password"
+                            />
+                            <InputError message={errors.password} className="mt-2" />
+                        </div>
                     </div>
-
-                    <div className="mt-6 flex justify-end">
-                        <SecondaryButton onClick={closeModal}>
-                            Cancel
-                        </SecondaryButton>
-
-                        <DangerButton className="ms-3" disabled={processing}>
-                            Delete Account
-                        </DangerButton>
-                    </div>
-                </form>
-            </Modal>
+                }
+            />
         </section>
     );
 }
