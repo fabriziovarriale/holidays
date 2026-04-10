@@ -69,7 +69,11 @@ class UsersController extends Controller
             'active' => true,
         ]);
 
-        $user->notify(new WelcomeNotification($user, createdByAdmin: true));
+        try {
+            $user->notify(new WelcomeNotification($user, createdByAdmin: true));
+        } catch (\Throwable $e) {
+            logger()->error('WelcomeNotification failed: '.$e->getMessage());
+        }
 
         return back()->with('status', 'Utente creato.');
     }

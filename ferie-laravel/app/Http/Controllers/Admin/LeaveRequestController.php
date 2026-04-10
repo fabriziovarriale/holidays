@@ -24,7 +24,11 @@ class LeaveRequestController extends Controller
         ]);
 
         if ($leaveRequest->user) {
-            $leaveRequest->user->notify(new LeaveRequestStatusChanged($leaveRequest));
+            try {
+                $leaveRequest->user->notify(new LeaveRequestStatusChanged($leaveRequest));
+            } catch (\Throwable $e) {
+                logger()->error('LeaveRequestStatusChanged notification failed: '.$e->getMessage());
+            }
         }
 
         return back()->with('status', 'Richiesta approvata.');
@@ -67,7 +71,11 @@ class LeaveRequestController extends Controller
         ]);
 
         if ($leaveRequest->user) {
-            $leaveRequest->user->notify(new LeaveRequestStatusChanged($leaveRequest->fresh()));
+            try {
+                $leaveRequest->user->notify(new LeaveRequestStatusChanged($leaveRequest->fresh()));
+            } catch (\Throwable $e) {
+                logger()->error('LeaveRequestStatusChanged notification failed: '.$e->getMessage());
+            }
         }
 
         return back()->with('status', 'Richiesta rifiutata.');

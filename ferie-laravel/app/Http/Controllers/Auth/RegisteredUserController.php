@@ -58,7 +58,11 @@ class RegisteredUserController extends Controller
             'active'     => true,
         ]);
 
-        $user->notify(new WelcomeNotification($user, createdByAdmin: false));
+        try {
+            $user->notify(new WelcomeNotification($user, createdByAdmin: false));
+        } catch (\Throwable $e) {
+            logger()->error('WelcomeNotification failed: '.$e->getMessage());
+        }
 
         Auth::login($user);
 

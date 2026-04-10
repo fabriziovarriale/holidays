@@ -97,7 +97,11 @@ class LeaveRequestController extends Controller
         ]);
 
         $admins = User::where('role', 'admin')->where('active', true)->get();
-        Notification::send($admins, new LeaveRequestSubmitted($leaveRequest->load('user')));
+        try {
+            Notification::send($admins, new LeaveRequestSubmitted($leaveRequest->load('user')));
+        } catch (\Throwable $e) {
+            logger()->error('LeaveRequestSubmitted notification failed: '.$e->getMessage());
+        }
 
         $warning = $this->checkJobRoleOverlap(
             $targetUserId,
