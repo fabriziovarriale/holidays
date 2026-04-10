@@ -43,13 +43,18 @@ class LeaveRequestSubmitted extends Notification implements ShouldQueue
             ? "{$req->requested_units} ore"
             : "{$req->requested_units} ".($req->requested_units === 1 ? 'giorno' : 'giorni');
 
-        return (new MailMessage)
+        $mail = (new MailMessage)
             ->subject("Nuova richiesta di {$typeLabel} da {$name}")
             ->greeting("Ciao!")
             ->line("**{$name}** ha inviato una nuova richiesta di **{$typeLabel}**.")
             ->line("**Periodo:** {$period}")
-            ->line("**Durata:** {$units}")
-            ->when($req->note_user, fn ($mail) => $mail->line("**Nota:** {$req->note_user}"))
+            ->line("**Durata:** {$units}");
+
+        if ($req->note_user) {
+            $mail->line("**Nota:** {$req->note_user}");
+        }
+
+        return $mail
             ->action('Gestisci richiesta', url('/dashboard'))
             ->line('Accedi alla dashboard per approvare o rifiutare la richiesta.')
             ->salutation('Il sistema Ferie MVP');
