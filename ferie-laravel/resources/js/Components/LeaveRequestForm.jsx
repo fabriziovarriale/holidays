@@ -191,22 +191,8 @@ export default function LeaveRequestForm({
                         minDate={new Date(2020, 0, 1)}
                         required
                     />
-                    {errors.startDate && (
-                        errors.startDate.includes('Budget ferie') && (isAdminUser || isAdmin) && data.userId ? (
-                            <div className="mt-2">
-                                <SlideoverAlert
-                                    variant="error"
-                                    title="Budget ferie non impostato"
-                                    body="Questo dipendente non ha ancora un budget assegnato per l'anno corrente."
-                                    action={{
-                                        label: 'Imposta budget ora',
-                                        href: `${route('admin.users.index')}?openUser=${data.userId}`,
-                                    }}
-                                />
-                            </div>
-                        ) : (
-                            <InputError message={errors.startDate} className="mt-2" />
-                        )
+                    {errors.startDate && !errors.startDate.includes('Budget ferie') && (
+                        <InputError message={errors.startDate} className="mt-2" />
                     )}
                 </div>
                 <div>
@@ -221,6 +207,18 @@ export default function LeaveRequestForm({
                     <InputError message={errors.endDate} className="mt-2" />
                 </div>
             </div>
+
+            {errors.startDate?.includes('Budget ferie') && (isAdminUser || isAdmin) && data.userId && (
+                <SlideoverAlert
+                    variant="error"
+                    title="Budget ferie non impostato"
+                    body="Questo dipendente non ha ancora un budget assegnato per l'anno corrente."
+                    action={{
+                        label: 'Imposta budget ora',
+                        href: `${route('admin.users.index')}?openUser=${data.userId}`,
+                    }}
+                />
+            )}
 
             <div>
                 <InputLabel htmlFor="note" value="Note opzionali" />
