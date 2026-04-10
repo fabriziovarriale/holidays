@@ -15,7 +15,7 @@ const JOB_ROLE_OPTIONS = [
 ];
 
 export default function CreateUserSlideover({ show, onClose }) {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, reset, processing, errors } = useForm({
         firstName: '',
         lastName: '',
         email: '',
@@ -27,7 +27,7 @@ export default function CreateUserSlideover({ show, onClose }) {
     const submit = (e) => {
         e.preventDefault();
         post(route('admin.users.store'), {
-            onSuccess: () => onClose?.(),
+            onSuccess: () => { reset(); onClose?.(); },
         });
     };
 
