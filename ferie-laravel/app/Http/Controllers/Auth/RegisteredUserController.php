@@ -48,7 +48,10 @@ class RegisteredUserController extends Controller
             'password.confirmed'  => 'Le password non coincidono.',
         ]);
 
+        $name = trim($request->first_name.' '.$request->last_name) ?: $request->email;
+
         $user = User::create([
+            'name'       => $name,
             'first_name' => $request->first_name,
             'last_name'  => $request->last_name,
             'job_role'   => $request->job_role,
