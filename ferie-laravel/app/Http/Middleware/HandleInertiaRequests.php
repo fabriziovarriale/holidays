@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Models\LeaveRequest;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -35,13 +37,27 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
             ],
+            'impersonation' => [
+                'active' => false,
+                'adminName' => null,
+            ],
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
                 'warning' => fn () => $request->session()->get('warning'),
             ],
         ];
 
+        $impersonatorId = (int) $request->session()->get('impersonator_admin_id', 0);
+        if ($impersonatorId > 0) {
+            $impersonator = User::find($impersonatorId);
+            $shared['impersonation'] = [
+                'active' => true,
+                'adminName' => $impersonator?->name,
+            ];
+        }
+
         if ($user && $user->isAdmin()) {
+            $year = (int) ($request->get('year') ?? now()->year);
             $employees = \App\Models\User::where('active', true)
                 ->where('role', '!=', 'admin')
                 ->orderBy('last_name')
@@ -52,16 +68,24 @@ class HandleInertiaRequests extends Middleware
                 'label' => trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')) ?: $u->email,
             ])->values()->all();
             $balances = \App\Models\LeaveBalance::whereIn('user_id', $employees->pluck('id'))
-                ->where('year', now()->year)
+                ->where('year', $year)
                 ->get()
                 ->keyBy('user_id');
-            $shared['adminEmployeesWithBalances'] = $employees->mapWithKeys(fn ($u) => [
-                (string) $u->id => [
-                    'total' => $balances->get($u->id)?->allocated_days ?? 0,
-                    'used' => $balances->get($u->id)?->used_days ?? 0,
-                    'remaining' => ($balances->get($u->id)?->allocated_days ?? 0) - ($balances->get($u->id)?->used_days ?? 0),
-                ],
-            ])->all();
+
+            $approvedUsedDaysByUser = LeaveRequest::sumDeductibleApprovedDaysByUserForYear($year);
+
+            $shared['adminEmployeesWithBalances'] = $employees->mapWithKeys(function ($u) use ($balances, $approvedUsedDaysByUser) {
+                $allocated = (int) ($balances->get($u->id)?->allocated_days ?? 0);
+                $used = (int) $approvedUsedDaysByUser->get($u->id, 0);
+
+                return [
+                    (string) $u->id => [
+                        'total' => $allocated,
+                        'used' => $used,
+                        'remaining' => max(0, $allocated - $used),
+                    ],
+                ];
+            })->all();
         } else {
             $shared['adminEmployees'] = [];
             $shared['adminEmployeesWithBalances'] = [];

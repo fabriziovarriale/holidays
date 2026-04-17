@@ -16,9 +16,11 @@ return [
     | Supported: "file", "cookie", "database", "memcached",
     |            "redis", "dynamodb", "array"
     |
+    | Il default `file` evita errori in locale con SQLite senza tabella `sessions`.
+    | In produzione con più istanze imposta SESSION_DRIVER=database|redis dopo migrate.
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    'driver' => env('SESSION_DRIVER', 'file'),
 
     /*
     |--------------------------------------------------------------------------

@@ -25,6 +25,7 @@ class LeaveRequestConcurrentTest extends TestCase
             'startDate' => '2026-06-02',
             'endDate' => '2026-06-04',
             'requestedUnits' => '0',
+            'sickCertificatePuc' => 'PUC-TEST-001',
             'note' => '',
         ];
 

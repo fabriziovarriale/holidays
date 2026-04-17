@@ -47,6 +47,10 @@ class LeaveRequestSubmitted extends Notification
             ->line("**Periodo:** {$period}")
             ->line("**Durata:** {$units}");
 
+        if ($req->leave_type_code === 'MALATTIA' && $req->sick_certificate_puc) {
+            $mail->line("**PUC certificato:** {$req->sick_certificate_puc}");
+        }
+
         if ($req->note_user) {
             $mail->line("**Nota:** {$req->note_user}");
         }

@@ -3,45 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\WorkingDays;
+use App\Http\Requests\StoreLeaveRequest;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Models\User;
 use App\Notifications\LeaveRequestSubmitted;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 
 class LeaveRequestController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(StoreLeaveRequest $request): RedirectResponse
     {
-        $rules = [
-            'leaveType' => 'required|string|in:FERIE,MALATTIA,PERMESSO',
-            'startDate' => 'required|date',
-            'endDate' => 'required|date|after_or_equal:startDate',
-            'requestedUnits' => 'nullable|integer|min:0',
-            'note' => 'nullable|string|max:1000',
-        ];
-
-        if ($request->user()->isAdmin()) {
-            $rules['userId'] = 'required|exists:users,id';
-        }
-
-        $validated = $request->validate($rules, [
-            'startDate.required' => 'Inserisci data inizio.',
-            'startDate.date' => 'Data inizio non valida.',
-            'endDate.required' => 'Inserisci data fine.',
-            'endDate.date' => 'Data fine non valida.',
-            'endDate.after_or_equal' => 'Data fine deve essere ≥ data inizio.',
-            'leaveType.required' => 'Seleziona tipo assenza.',
-            'leaveType.in' => 'Tipo assenza non valido. Valori ammessi: Ferie, Malattia, Permesso.',
-            'requestedUnits.integer' => 'Ore non valide.',
-            'requestedUnits.min' => 'Inserisci almeno 1 ora.',
-            'note.max' => 'Note troppo lunghe.',
-            'userId.required' => 'Seleziona il dipendente.',
-            'userId.exists' => 'Dipendente non valido.',
-        ]);
+        $validated = $request->validated();
 
         $targetUserId = $request->user()->isAdmin()
             ? (int) $validated['userId']
@@ -54,11 +31,40 @@ class LeaveRequestController extends Controller
             return back()->withErrors(['leaveType' => 'Tipo non valido.']);
         }
 
+        $start = Carbon::parse($validated['startDate'])->startOfDay();
+        $end = Carbon::parse($validated['endDate'])->startOfDay();
+
+        if (in_array($validated['leaveType'], ['FERIE', 'PERMESSO'], true)
+            && $this->periodOverlapsPendingOrApprovedSickLeave($targetUserId, $start, $end)) {
+            return back()->withErrors([
+                'startDate' => 'Non puoi richiedere ferie o permesso in giorni per cui esiste già una richiesta di malattia (in attesa o approvata).',
+            ]);
+        }
+
+        $noticeDays = (int) ($leaveType->notice_days_required ?? 0);
+        if ($noticeDays > 0) {
+            $minStart = now()->startOfDay()->addDays($noticeDays);
+            if ($start->lt($minStart)) {
+                return back()->withErrors([
+                    'startDate' => "Serve un preavviso di {$noticeDays} giorni.",
+                ]);
+            }
+        }
+
         $requestedUnits = (int) ($validated['requestedUnits'] ?? 0);
 
         if ($leaveType->unit === 'days') {
-            $days = WorkingDays::between($validated['startDate'], $validated['endDate']);
+            $days = WorkingDays::between($start->toDateString(), $end->toDateString());
             $requestedUnits = $days;
+
+            $maxConsecutiveDays = $leaveType->max_consecutive_days !== null
+                ? (int) $leaveType->max_consecutive_days
+                : null;
+            if ($maxConsecutiveDays !== null && $days > $maxConsecutiveDays) {
+                return back()->withErrors([
+                    'startDate' => "Massimo consentito: {$maxConsecutiveDays} giorni consecutivi.",
+                ]);
+            }
 
             if ($leaveType->deducts_balance) {
                 $currentYear = now()->year;
@@ -86,14 +92,44 @@ class LeaveRequestController extends Controller
             return back()->withErrors(['requestedUnits' => 'Minimo 1 ora.']);
         }
 
+        if ($leaveType->requires_attachment && ! $request->hasFile('attachment')) {
+            return back()->withErrors([
+                'attachment' => 'Allegato obbligatorio per questo tipo di assenza.',
+            ]);
+        }
+
+        $puc = isset($validated['sickCertificatePuc']) ? trim((string) $validated['sickCertificatePuc']) : '';
+        if ($validated['leaveType'] === 'MALATTIA' && $puc === '') {
+            return back()->withErrors([
+                'sickCertificatePuc' => 'Inserisci il numero di protocollo (PUC) del certificato.',
+            ]);
+        }
+
+        $attachmentPath = null;
+        $attachmentOriginalName = null;
+        $attachmentMime = null;
+        $attachmentSize = null;
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $attachmentPath = $file->store('private/leave_attachments');
+            $attachmentOriginalName = $file->getClientOriginalName();
+            $attachmentMime = $file->getClientMimeType();
+            $attachmentSize = $file->getSize();
+        }
+
         $leaveRequest = LeaveRequest::create([
             'user_id' => $targetUserId,
             'leave_type_code' => $validated['leaveType'],
-            'start_date' => $validated['startDate'],
-            'end_date' => $validated['endDate'],
+            'start_date' => $start->toDateString(),
+            'end_date' => $end->toDateString(),
             'requested_units' => $requestedUnits,
             'status' => 'PENDING',
             'note_user' => $validated['note'] ?? null,
+            'attachment_path' => $attachmentPath,
+            'attachment_original_name' => $attachmentOriginalName,
+            'attachment_mime' => $attachmentMime,
+            'attachment_size' => $attachmentSize,
+            'sick_certificate_puc' => $puc !== '' ? $puc : null,
         ]);
 
         $admins = User::where('role', 'admin')->where('active', true)->get();
@@ -112,6 +148,17 @@ class LeaveRequestController extends Controller
         return redirect()->route('dashboard')
             ->with('status', 'Richiesta inviata con successo.')
             ->with('warning', $warning);
+    }
+
+    private function periodOverlapsPendingOrApprovedSickLeave(int $userId, Carbon $start, Carbon $end): bool
+    {
+        return LeaveRequest::query()
+            ->where('user_id', $userId)
+            ->where('leave_type_code', 'MALATTIA')
+            ->whereIn('status', ['PENDING', 'APPROVED'])
+            ->whereDate('start_date', '<=', $end)
+            ->whereDate('end_date', '>=', $start)
+            ->exists();
     }
 
     private function checkJobRoleOverlap(int $userId, string $startDate, string $endDate): ?string

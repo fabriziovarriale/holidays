@@ -17,7 +17,7 @@ class DashboardController extends Controller
     public function __invoke(Request $request): Response
     {
         $user = $request->user();
-        $year = now()->year;
+        $year = (int) ($request->get('year') ?? now()->year);
 
         $leaveTypes = LeaveType::where('active', true)
             ->orderBy('code')
@@ -27,6 +27,9 @@ class DashboardController extends Controller
                 'label' => $lt->description,
                 'deductsBalance' => $lt->deducts_balance,
                 'unit' => $lt->unit,
+                'requiresAttachment' => (bool) $lt->requires_attachment,
+                'maxConsecutiveDays' => $lt->max_consecutive_days !== null ? (int) $lt->max_consecutive_days : null,
+                'noticeDaysRequired' => (int) ($lt->notice_days_required ?? 0),
             ]);
 
         $employeeRequests = LeaveRequest::where('user_id', $user->id)
@@ -46,6 +49,18 @@ class DashboardController extends Controller
             'total' => $balance->allocated_days,
             'used' => $usedDays,
             'remaining' => max(0, $balance->allocated_days - $usedDays),
+        ] : null;
+
+        $leaveStoreYear = (int) now()->year;
+        $balanceLeaveStore = LeaveBalance::where('user_id', $user->id)
+            ->where('year', $leaveStoreYear)
+            ->first();
+        $usedLeaveStoreYear = (int) LeaveRequest::sumDeductibleApprovedDaysByUserForYear($leaveStoreYear)
+            ->get($user->id, 0);
+        $employeeBalanceForLeaveStore = $balanceLeaveStore ? [
+            'total' => (int) $balanceLeaveStore->allocated_days,
+            'used' => $usedLeaveStoreYear,
+            'remaining' => max(0, (int) $balanceLeaveStore->allocated_days - $usedLeaveStoreYear),
         ] : null;
 
         $calendarFrom = now()->startOfYear()->subYear();
@@ -68,6 +83,7 @@ class DashboardController extends Controller
             ->where('status', 'APPROVED')
             ->where('start_date', '<=', $calendarTo)
             ->where('end_date', '>=', $calendarFrom)
+            ->when(! $user->isAdmin(), fn ($q) => $q->where('user_id', $user->id))
             ->with(['user', 'leaveType'])
             ->orderBy('start_date')
             ->limit(500)
@@ -100,8 +116,11 @@ class DashboardController extends Controller
                 'lastName' => $user->last_name ?? '',
                 'role' => $user->role ?? 'user',
             ],
+            'year' => $year,
             'leaveTypes' => $leaveTypes,
             'employeeBalance' => $employeeBalance,
+            'employeeBalanceForLeaveStore' => $employeeBalanceForLeaveStore,
+            'leaveStoreYear' => $leaveStoreYear,
             'employeeRequests' => $employeeRequests,
             'approvedLeaveCalendar' => $approvedLeaveCalendar,
             'companyHolidays' => $companyHolidays,
@@ -128,15 +147,23 @@ class DashboardController extends Controller
                 ->get()
                 ->keyBy('user_id');
 
-            $employeesWithBalances = $employeesCollection->mapWithKeys(fn ($u) => [
-                (string) $u->id => [
-                    'total' => $balances->get($u->id)?->allocated_days ?? 0,
-                    'used' => $balances->get($u->id)?->used_days ?? 0,
-                    'remaining' => ($balances->get($u->id)?->allocated_days ?? 0) - ($balances->get($u->id)?->used_days ?? 0),
-                ],
-            ])->all();
+            $approvedUsedDaysByUser = LeaveRequest::sumDeductibleApprovedDaysByUserForYear($year);
+
+            $employeesWithBalances = $employeesCollection->mapWithKeys(function ($u) use ($balances, $approvedUsedDaysByUser) {
+                $allocated = (int) ($balances->get($u->id)?->allocated_days ?? 0);
+                $used = (int) $approvedUsedDaysByUser->get($u->id, 0);
+
+                return [
+                    (string) $u->id => [
+                        'total' => $allocated,
+                        'used' => $used,
+                        'remaining' => max(0, $allocated - $used),
+                    ],
+                ];
+            })->all();
 
             $pendingRequests = LeaveRequest::where('status', 'PENDING')
+                ->whereYear('start_date', $year)
                 ->with(['user', 'leaveType'])
                 ->orderByDesc('created_at')
                 ->get()
@@ -151,11 +178,13 @@ class DashboardController extends Controller
             $rejectedPage = (int) ($request->get('rejected_page', 1));
 
             $approvedPaginator = LeaveRequest::where('status', 'APPROVED')
+                ->whereYear('start_date', $year)
                 ->with(['user', 'leaveType'])
                 ->orderByDesc('created_at')
                 ->paginate($perPage, ['*'], 'approved_page', $approvedPage);
 
             $rejectedPaginator = LeaveRequest::where('status', 'REJECTED')
+                ->whereYear('start_date', $year)
                 ->with(['user', 'leaveType'])
                 ->orderByDesc('created_at')
                 ->paginate($perPage, ['*'], 'rejected_page', $rejectedPage);
@@ -227,6 +256,9 @@ class DashboardController extends Controller
             'status' => $r->status,
             'noteUser' => $r->note_user,
             'noteAdmin' => $r->note_admin,
+            'hasAttachment' => (bool) $r->attachment_path,
+            'attachmentName' => $r->attachment_original_name,
+            'sickCertificatePuc' => $r->sick_certificate_puc,
             'createdAt' => $r->created_at->toIso8601String(),
         ];
     }

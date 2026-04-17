@@ -8,6 +8,7 @@ import SlideoverAlert from '@/Components/SlideoverAlert';
 import TextInput from '@/Components/TextInput';
 import Textarea from '@/Components/Textarea';
 import { useForm, usePage } from '@inertiajs/react';
+import { addDays, startOfDay } from 'date-fns';
 import { useEffect, useMemo, useRef } from 'react';
 
 function workingDaysBetween(startDate, endDate) {
@@ -28,6 +29,8 @@ function workingDaysBetween(startDate, endDate) {
 export default function LeaveRequestForm({
     leaveTypes,
     employeeBalance,
+    employeeBalanceForLeaveStore = null,
+    leaveStoreYear = new Date().getFullYear(),
     employees = [],
     employeesWithBalances = {},
     isAdmin = false,
@@ -55,6 +58,8 @@ export default function LeaveRequestForm({
         startDate: initialStartDate ?? '',
         endDate: initialEndDate ?? '',
         requestedUnits: '0',
+        attachment: null,
+        sickCertificatePuc: '',
         note: '',
     });
 
@@ -94,8 +99,15 @@ export default function LeaveRequestForm({
         if (showEmployeeSelect && data.userId) {
             return balancesMap[data.userId] ?? null;
         }
-        return employeeBalance;
-    }, [showEmployeeSelect, data.userId, balancesMap, employeeBalance]);
+        return employeeBalanceForLeaveStore ?? employeeBalance;
+    }, [showEmployeeSelect, data.userId, balancesMap, employeeBalanceForLeaveStore, employeeBalance]);
+
+    const isSelfServiceEmployee = !isAdmin && !isAdminUser;
+    const missingLeaveBudgetForStore =
+        isSelfServiceEmployee &&
+        selectedType?.deductsBalance &&
+        selectedType?.unit === 'days' &&
+        displayBalance == null;
 
     const estimatedDays = useMemo(() => {
         if (data.startDate && data.endDate) {
@@ -104,10 +116,29 @@ export default function LeaveRequestForm({
         return null;
     }, [data.startDate, data.endDate]);
 
+    const noticeMinStartDate = useMemo(() => {
+        const notice = Number(selectedType?.noticeDaysRequired ?? 0);
+        if (!notice || notice < 1) return new Date(2020, 0, 1);
+        return startOfDay(addDays(new Date(), notice));
+    }, [selectedType?.noticeDaysRequired]);
+
+    const maxConsecutiveDays = useMemo(() => {
+        const v = selectedType?.maxConsecutiveDays;
+        if (v == null) return null;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+    }, [selectedType?.maxConsecutiveDays]);
+
+    const isAttachmentRequired = Boolean(selectedType?.requiresAttachment);
+    const startDateError = String(errors.startDate ?? '');
+    const hasBudgetError = startDateError.includes('Budget ferie');
+    const hasSickOverlapError = startDateError.includes('richiedere ferie o permesso');
+
     const submit = (e) => {
         e.preventDefault();
         post(route('leave-request.store'), {
             preserveScroll: true,
+            forceFormData: data.attachment instanceof File,
             onSuccess: () => { reset(); onSuccess?.(); },
         });
     };
@@ -138,7 +169,7 @@ export default function LeaveRequestForm({
             )}
 
             <p className="text-sm text-muted-foreground">
-                In MVP i giorni lavorativi saranno ricalcolati lato database in fase di approvazione.
+                I giorni lavorativi vengono calcolati escludendo weekend e festività (se presenti).
             </p>
 
             <div>
@@ -169,6 +200,25 @@ export default function LeaveRequestForm({
                 </div>
             )}
 
+            {data.leaveType === 'MALATTIA' && (
+                <div>
+                    <InputLabel htmlFor="sickCertificatePuc" value="Numero protocollo certificato (PUC)" />
+                    <TextInput
+                        id="sickCertificatePuc"
+                        type="text"
+                        value={data.sickCertificatePuc ?? ''}
+                        onChange={(e) => setData('sickCertificatePuc', e.target.value)}
+                        className="mt-1 block w-full"
+                        placeholder="Es. 1234567890"
+                        required
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Obbligatorio per la malattia: comunica il PUC al datore di lavoro.
+                    </p>
+                    <InputError message={errors.sickCertificatePuc} className="mt-2" />
+                </div>
+            )}
+
             {selectedType?.deductsBalance &&
                 selectedType?.unit === 'days' &&
                 data.startDate &&
@@ -181,6 +231,29 @@ export default function LeaveRequestForm({
                     </p>
                 )}
 
+            {selectedType?.unit === 'days' &&
+                maxConsecutiveDays != null &&
+                estimatedDays != null &&
+                estimatedDays > maxConsecutiveDays && (
+                    <p className="text-sm text-destructive">
+                        Superi il massimo consentito di {maxConsecutiveDays} giorni consecutivi.
+                    </p>
+                )}
+
+            {selectedType?.noticeDaysRequired > 0 && (
+                <p className="text-sm text-muted-foreground">
+                    Preavviso richiesto: {selectedType.noticeDaysRequired} giorni.
+                </p>
+            )}
+
+            {missingLeaveBudgetForStore && !hasBudgetError && (
+                <SlideoverAlert
+                    variant="warning"
+                    title="Budget ferie non impostato"
+                    body={`Non risulta un budget assegnato per il ${leaveStoreYear}. Contatta l'amministratore per impostare i giorni disponibili prima di inviare richieste che scalano il saldo.`}
+                />
+            )}
+
             <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                     <InputLabel htmlFor="startDate" value="Data inizio" />
@@ -188,10 +261,10 @@ export default function LeaveRequestForm({
                         id="startDate"
                         value={data.startDate ?? ''}
                         onChange={(v) => setData('startDate', v)}
-                        minDate={new Date(2020, 0, 1)}
+                        minDate={noticeMinStartDate}
                         required
                     />
-                    {errors.startDate && !errors.startDate.includes('Budget ferie') && (
+                    {errors.startDate && !hasBudgetError && !hasSickOverlapError && (
                         <InputError message={errors.startDate} className="mt-2" />
                     )}
                 </div>
@@ -201,22 +274,54 @@ export default function LeaveRequestForm({
                         id="endDate"
                         value={data.endDate ?? ''}
                         onChange={(v) => setData('endDate', v)}
-                        minDate={parseYmdToLocalDate(data.startDate) ?? new Date(2020, 0, 1)}
+                        minDate={parseYmdToLocalDate(data.startDate) ?? noticeMinStartDate}
                         required
                     />
                     <InputError message={errors.endDate} className="mt-2" />
                 </div>
             </div>
 
-            {errors.startDate?.includes('Budget ferie') && (isAdminUser || isAdmin) && data.userId && (
+            {hasSickOverlapError && (
+                <SlideoverAlert
+                    variant="error"
+                    title="Conflitto con malattia"
+                    body={startDateError}
+                />
+            )}
+
+            {isAttachmentRequired && (
+                <div>
+                    <InputLabel htmlFor="attachment" value="Allegato" />
+                    <input
+                        id="attachment"
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg"
+                        onChange={(e) => setData('attachment', e.target.files?.[0] ?? null)}
+                        className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm file:mr-4 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-accent"
+                        required
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">PDF o immagine (max 2MB).</p>
+                    <InputError message={errors.attachment} className="mt-2" />
+                </div>
+            )}
+
+            {hasBudgetError && (
                 <SlideoverAlert
                     variant="error"
                     title="Budget ferie non impostato"
-                    body="Questo dipendente non ha ancora un budget assegnato per l'anno corrente."
-                    action={{
-                        label: 'Imposta budget ora',
-                        href: `${route('admin.users.index')}?openUser=${data.userId}`,
-                    }}
+                    body={
+                        (isAdminUser || isAdmin) && data.userId
+                            ? "Questo dipendente non ha ancora un budget assegnato per l'anno corrente."
+                            : "Non risulta un budget ferie per te per l'anno corrente. Contatta l'amministratore per impostare i giorni disponibili."
+                    }
+                    action={
+                        (isAdminUser || isAdmin) && data.userId
+                            ? {
+                                label: 'Imposta budget ora',
+                                href: `${route('admin.users.index')}?openUser=${data.userId}`,
+                            }
+                            : undefined
+                    }
                 />
             )}
 

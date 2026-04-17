@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LeaveRequestAttachmentController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +25,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('leave-request.store');
     Route::patch('/dashboard/request/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])
         ->name('leave-request.cancel');
+    Route::get('/dashboard/request/{leaveRequest}/attachment', [LeaveRequestAttachmentController::class, 'download'])
+        ->name('leave-request.attachment');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -31,10 +34,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/users', [UsersController::class, 'store'])->name('users.store');
     Route::patch('/users/{user}/balance', [UsersController::class, 'updateBalance'])->name('users.balance');
     Route::delete('/users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
+    Route::get('/reports/export-leaves', [App\Http\Controllers\Admin\ReportController::class, 'exportLeaves'])->name('reports.export-leaves');
     Route::patch('/requests/{leaveRequest}/approve', [App\Http\Controllers\Admin\LeaveRequestController::class, 'approve'])->name('requests.approve');
     Route::patch('/requests/{leaveRequest}/reject', [App\Http\Controllers\Admin\LeaveRequestController::class, 'reject'])->name('requests.reject');
     Route::patch('/requests/{leaveRequest}/revoke', [App\Http\Controllers\Admin\LeaveRequestController::class, 'revoke'])->name('requests.revoke');
     Route::delete('/requests/{leaveRequest}', [App\Http\Controllers\Admin\LeaveRequestController::class, 'destroy'])->name('requests.destroy');
+    Route::post('/users/{user}/impersonate', [UsersController::class, 'impersonate'])->name('users.impersonate');
 
 });
 
@@ -42,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/impersonation/stop', [App\Http\Controllers\Admin\UsersController::class, 'stopImpersonation'])->name('impersonation.stop');
 });
 
 require __DIR__.'/auth.php';

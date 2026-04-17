@@ -18,6 +18,11 @@ class LeaveRequest extends Model
         'note_user',
         'note_admin',
         'approved_days',
+        'attachment_path',
+        'attachment_original_name',
+        'attachment_mime',
+        'attachment_size',
+        'sick_certificate_puc',
     ];
 
     protected function casts(): array
@@ -26,6 +31,7 @@ class LeaveRequest extends Model
             'start_date' => 'date',
             'end_date' => 'date',
             'requested_units' => 'integer',
+            'attachment_size' => 'integer',
         ];
     }
 

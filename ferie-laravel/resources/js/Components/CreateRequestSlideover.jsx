@@ -6,6 +6,8 @@ export default function CreateRequestSlideover({
     onClose,
     leaveTypes,
     employeeBalance,
+    employeeBalanceForLeaveStore = null,
+    leaveStoreYear,
     employees = [],
     employeesWithBalances = {},
     isAdmin = false,
@@ -16,6 +18,8 @@ export default function CreateRequestSlideover({
             <LeaveRequestForm
                 leaveTypes={leaveTypes}
                 employeeBalance={employeeBalance}
+                employeeBalanceForLeaveStore={employeeBalanceForLeaveStore}
+                leaveStoreYear={leaveStoreYear}
                 employees={employees}
                 employeesWithBalances={employeesWithBalances}
                 isAdmin={isAdmin}

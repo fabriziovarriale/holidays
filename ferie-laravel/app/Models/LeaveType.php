@@ -19,6 +19,10 @@ class LeaveType extends Model
         'deducts_balance',
         'unit',
         'active',
+        'requires_attachment',
+        'max_consecutive_days',
+        'notice_days_required',
+        'accrual_rule',
     ];
 
     protected function casts(): array
@@ -26,6 +30,9 @@ class LeaveType extends Model
         return [
             'deducts_balance' => 'boolean',
             'active' => 'boolean',
+            'requires_attachment' => 'boolean',
+            'max_consecutive_days' => 'integer',
+            'notice_days_required' => 'integer',
         ];
     }
 

@@ -8,8 +8,11 @@ import { useState, useEffect } from 'react';
 
 export default function Dashboard({
     user,
+    year,
     leaveTypes,
     employeeBalance,
+    employeeBalanceForLeaveStore = null,
+    leaveStoreYear = new Date().getFullYear(),
     employeeRequests,
     employees = [],
     employeesWithBalances = {},
@@ -22,10 +25,16 @@ export default function Dashboard({
     rejectedRequests = [],
     rejectedMeta = null,
 }) {
-    const { errors = {} } = usePage().props;
+    const { errors = {}, flash = {}, impersonation = {} } = usePage().props;
     const [createSlideoverOpen, setCreateSlideoverOpen] = useState(false);
 
-    const { flash = {} } = usePage().props;
+    const showFlashStatus =
+        Boolean(flash.status) &&
+        !(
+            impersonation?.active &&
+            typeof flash.status === 'string' &&
+            flash.status.toLowerCase().includes('impersonaz')
+        );
 
     const hasLeaveErrors = ['leaveType', 'startDate', 'endDate', 'requestedUnits', 'note', 'userId'].some((k) => errors?.[k]);
     useEffect(() => {
@@ -40,13 +49,28 @@ export default function Dashboard({
                     <h2 className="text-xl font-semibold leading-tight text-foreground">
                         Dashboard
                     </h2>
-                    <button
-                        type="button"
-                        onClick={() => setCreateSlideoverOpen(true)}
-                        className="inline-flex shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-                    >
-                        Crea richiesta
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {isAdmin && (
+                            <a
+                                href={route('admin.reports.export-leaves', { year: Number(year || new Date().getFullYear()) })}
+                                className="inline-flex shrink-0 items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+                                aria-label="Esporta CSV"
+                                title="Esporta CSV"
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v12m0 0l4-4m-4 4l-4-4M4 17v1a3 3 0 003 3h10a3 3 0 003-3v-1" />
+                                </svg>
+                                <span className="hidden sm:inline">Esporta CSV</span>
+                            </a>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => setCreateSlideoverOpen(true)}
+                            className="inline-flex shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+                        >
+                            Crea richiesta
+                        </button>
+                    </div>
                 </div>
             }
         >
@@ -54,7 +78,7 @@ export default function Dashboard({
 
             <div className="py-6">
                 <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
-                    {flash.status && (
+                    {showFlashStatus && (
                         <div className="rounded-md bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
                             {flash.status}
                         </div>
@@ -82,6 +106,8 @@ export default function Dashboard({
                 onClose={() => setCreateSlideoverOpen(false)}
                 leaveTypes={leaveTypes}
                 employeeBalance={employeeBalance}
+                employeeBalanceForLeaveStore={employeeBalanceForLeaveStore}
+                leaveStoreYear={leaveStoreYear}
                 employees={employees}
                 employeesWithBalances={employeesWithBalances}
                 isAdmin={isAdmin}
@@ -137,13 +163,31 @@ function BalanceBar({ balance }) {
 function EmployeeView({ balance, requests }) {
     const [pendingCancelId, setPendingCancelId] = useState(null);
     const [cancelProcessing, setCancelProcessing] = useState(false);
+    const [selectedRequest, setSelectedRequest] = useState(null);
+    const [detailSlideoverOpen, setDetailSlideoverOpen] = useState(false);
+
+    const openDetail = (r) => {
+        setSelectedRequest(r);
+        setDetailSlideoverOpen(true);
+    };
+
+    const closeDetail = () => {
+        setDetailSlideoverOpen(false);
+        setSelectedRequest(null);
+    };
 
     const handleCancel = () => {
         if (!pendingCancelId) return;
         setCancelProcessing(true);
         router.patch(route('leave-request.cancel', pendingCancelId), {}, {
             preserveScroll: true,
-            onSuccess: () => { setCancelProcessing(false); setPendingCancelId(null); },
+            onSuccess: () => {
+                setCancelProcessing(false);
+                setPendingCancelId(null);
+                if (selectedRequest?.id === pendingCancelId) {
+                    closeDetail();
+                }
+            },
             onError: () => setCancelProcessing(false),
         });
     };
@@ -178,7 +222,19 @@ function EmployeeView({ balance, requests }) {
                         {/* Card layout — mobile */}
                         <ul className="space-y-3 sm:hidden">
                             {requests.map((r) => (
-                                <li key={r.id} className="rounded-lg border border-border p-3 sm:p-4">
+                                <li
+                                    key={r.id}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => openDetail(r)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            openDetail(r);
+                                        }
+                                    }}
+                                    className="cursor-pointer rounded-lg border border-border p-3 sm:p-4 outline-none hover:bg-accent/50"
+                                >
                                     <div className="flex items-start justify-between gap-2">
                                         <div>
                                             <p className="font-medium text-foreground">{r.leaveType}</p>
@@ -196,7 +252,10 @@ function EmployeeView({ balance, requests }) {
                                     {r.status === 'PENDING' && (
                                         <button
                                             type="button"
-                                            onClick={() => setPendingCancelId(r.id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setPendingCancelId(r.id);
+                                            }}
                                             className="mt-3 text-xs text-destructive hover:underline"
                                         >
                                             Annulla richiesta
@@ -221,7 +280,19 @@ function EmployeeView({ balance, requests }) {
                                 </thead>
                                 <tbody className="divide-y divide-border">
                                     {requests.map((r) => (
-                                        <tr key={r.id}>
+                                        <tr
+                                            key={r.id}
+                                            role="button"
+                                            tabIndex={0}
+                                            onClick={() => openDetail(r)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    openDetail(r);
+                                                }
+                                            }}
+                                            className="cursor-pointer outline-none transition-colors hover:bg-accent"
+                                        >
                                             <td className="px-4 py-2 pl-0 text-foreground">{r.leaveType}</td>
                                             <td className="px-4 py-2 text-foreground">{r.startDate}</td>
                                             <td className="px-4 py-2 text-foreground">{r.endDate}</td>
@@ -233,7 +304,10 @@ function EmployeeView({ balance, requests }) {
                                                 {r.status === 'PENDING' && (
                                                     <button
                                                         type="button"
-                                                        onClick={() => setPendingCancelId(r.id)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setPendingCancelId(r.id);
+                                                        }}
                                                         className="text-xs text-destructive hover:underline"
                                                     >
                                                         Annulla
@@ -259,6 +333,13 @@ function EmployeeView({ balance, requests }) {
                 processing={cancelProcessing}
                 onConfirm={handleCancel}
                 onCancel={() => setPendingCancelId(null)}
+            />
+
+            <RequestDetailSlideover
+                request={selectedRequest}
+                show={detailSlideoverOpen}
+                onClose={closeDetail}
+                variant="employee"
             />
         </div>
     );
@@ -294,7 +375,7 @@ function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRe
     return (
         <div className="space-y-6">
             <section className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-lg border-l-4 border-l-primary bg-primary/10 p-3 sm:p-4">
+                <div className="rounded-lg border-l-4 border-l-amber-500 bg-amber-500/10 p-3 sm:p-4">
                     <p className="text-sm text-muted-foreground">Richieste in attesa</p>
                     <p className="text-2xl font-semibold text-foreground">{pendingRequests.length}</p>
                 </div>
@@ -302,7 +383,7 @@ function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRe
                     <p className="text-sm text-muted-foreground">Richieste approvate</p>
                     <p className="text-2xl font-semibold text-foreground">{approvedRequests.length}</p>
                 </div>
-                <div className="rounded-lg border-l-4 border-l-destructive bg-destructive/10 p-3 sm:p-4">
+                <div className="rounded-lg border-l-4 border-l-rose-500 bg-rose-500/10 p-3 sm:p-4">
                     <p className="text-sm text-muted-foreground">Richieste rifiutate</p>
                     <p className="text-2xl font-semibold text-foreground">{rejectedRequests.length}</p>
                 </div>
@@ -355,7 +436,7 @@ function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRe
                                         <tr
                                             key={r.id}
                                             onClick={() => openDetail(r)}
-                                            className="cursor-pointer transition-colors hover:bg-accent/50"
+                                            className="cursor-pointer transition-colors hover:bg-accent"
                                         >
                                             <td className="px-4 py-2 pl-0 text-foreground">{r.userFullName}</td>
                                             <td className="px-4 py-2 text-foreground">{r.leaveType}</td>

@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import CreateUserSlideover from '@/Components/CreateUserSlideover';
 import UserDetailSlideover from '@/Components/UserDetailSlideover';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 const CREATE_USER_ERROR_KEYS = ['firstName', 'lastName', 'email', 'password', 'password_confirmation', 'jobRole'];
@@ -34,10 +34,24 @@ export default function Users({ users, year }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-foreground">
-                        Utenti
-                    </h2>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-xl font-semibold leading-tight text-foreground">
+                            Utenti
+                        </h2>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">Anno</span>
+                            <select
+                                value={String(year)}
+                                onChange={(e) => router.get(route('admin.users.index'), { year: e.target.value }, { preserveScroll: true, preserveState: true })}
+                                className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm"
+                            >
+                                {[year - 1, year, year + 1].map((y) => (
+                                    <option key={y} value={String(y)}>{y}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
                     <button
                         type="button"
                         onClick={() => setCreateSlideoverOpen(true)}
@@ -103,6 +117,18 @@ export default function Users({ users, year }) {
                                                     <p className="font-semibold text-foreground">{u.remaining}</p>
                                                 </div>
                                             </div>
+                                            <div className="mt-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        router.post(route('admin.users.impersonate', u.id));
+                                                    }}
+                                                    className="w-full rounded-md border border-input px-3 py-2 text-xs font-medium text-foreground hover:bg-accent"
+                                                >
+                                                    Entra come dipendente
+                                                </button>
+                                            </div>
                                         </li>
                                     ))}
                                 </ul>
@@ -118,6 +144,7 @@ export default function Users({ users, year }) {
                                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Budget {year}</th>
                                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Usati</th>
                                                 <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Residui</th>
+                                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Azioni</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border">
@@ -125,7 +152,7 @@ export default function Users({ users, year }) {
                                                 <tr
                                                     key={u.id}
                                                     onClick={() => setSelectedUser(u)}
-                                                    className="cursor-pointer transition-colors hover:bg-accent/50"
+                                                    className="cursor-pointer transition-colors hover:bg-accent"
                                                 >
                                                     <td className="px-4 py-2 pl-0 text-foreground">
                                                         {[u.firstName, u.lastName].filter(Boolean).join(' ') || '—'}
@@ -135,6 +162,18 @@ export default function Users({ users, year }) {
                                                     <td className="px-4 py-2 font-medium text-foreground">{u.allocatedDays}</td>
                                                     <td className="px-4 py-2 text-foreground">{u.usedDays}</td>
                                                     <td className="px-4 py-2 text-foreground">{u.remaining}</td>
+                                                    <td className="px-4 py-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                router.post(route('admin.users.impersonate', u.id));
+                                                            }}
+                                                            className="rounded-md border border-input px-2 py-1 text-xs font-medium text-foreground hover:bg-accent"
+                                                        >
+                                                            Entra come
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>

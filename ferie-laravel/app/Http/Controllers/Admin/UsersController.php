@@ -10,6 +10,7 @@ use App\Notifications\WelcomeNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
@@ -17,6 +18,8 @@ use Inertia\Response;
 
 class UsersController extends Controller
 {
+    private const IMPERSONATOR_SESSION_KEY = 'impersonator_admin_id';
+
     public function index(Request $request): Response
     {
         $year = (int) ($request->get('year') ?? now()->year);
@@ -110,6 +113,50 @@ class UsersController extends Controller
         $user->delete();
 
         return back()->with('status', 'Utente eliminato.');
+    }
+
+    public function impersonate(Request $request, User $user): RedirectResponse
+    {
+        $admin = $request->user();
+        if (! $admin || ! $admin->isAdmin()) {
+            abort(403);
+        }
+
+        if ($user->isAdmin()) {
+            return back()->withErrors(['impersonate' => 'Non puoi impersonare un amministratore.']);
+        }
+
+        $request->session()->put(self::IMPERSONATOR_SESSION_KEY, (int) $admin->id);
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return redirect()->route('dashboard');
+    }
+
+    public function stopImpersonation(Request $request): RedirectResponse
+    {
+        $impersonatorId = (int) $request->session()->get(self::IMPERSONATOR_SESSION_KEY, 0);
+        if ($impersonatorId < 1) {
+            return back();
+        }
+
+        $admin = User::find($impersonatorId);
+        $request->session()->forget(self::IMPERSONATOR_SESSION_KEY);
+
+        if (! $admin || ! $admin->isAdmin()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->withErrors(['impersonate' => 'Impossibile ripristinare la sessione admin.']);
+        }
+
+        Auth::login($admin);
+        $request->session()->regenerate();
+
+        return redirect()->route('admin.users.index')
+            ->with('status', 'Impersonazione terminata. Sei tornato come admin.');
     }
 
     /**
