@@ -41,13 +41,14 @@ export default function ConfirmDialog({
                     leaveTo="opacity-0 scale-95"
                 >
                     <DialogPanel
-                        className="h-card"
+                        className="h-card h-root"
                         style={{
                             position: 'relative',
                             width: '100%',
                             maxWidth: 440,
                             padding: 22,
                             background: 'var(--h-surface)',
+                            color: 'var(--h-ink)',
                         }}
                     >
                         {title && (

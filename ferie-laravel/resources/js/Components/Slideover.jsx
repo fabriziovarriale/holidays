@@ -48,10 +48,11 @@ export default function Slideover({
                             leaveTo="translate-x-full"
                         >
                             <DialogPanel
-                                className="pointer-events-auto h-full"
+                                className="pointer-events-auto h-full h-root"
                                 style={{
                                     width: `min(${panelWidth}px, 96vw)`,
                                     background: 'var(--h-surface)',
+                                    color: 'var(--h-ink)',
                                     borderLeft: '4px solid var(--h-line)',
                                     boxShadow: '-10px 0 0 0 var(--h-ink)',
                                     display: 'flex',
