@@ -22,7 +22,21 @@ function LegendDot({ label, color }) {
     );
 }
 
-export default function ReportsPage({ year, stats, monthly, roleBreakdown }) {
+const ACTIVITY_COLOR = {
+    approved: 'var(--h-mint)',
+    rejected: 'var(--h-rose)',
+    cancelled: 'var(--h-bg-2)',
+    pending: 'var(--h-yellow)',
+};
+
+function fmtActivityDate(value) {
+    if (!value) return '—';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+export default function ReportsPage({ year, stats, monthly, roleBreakdown, activity = [] }) {
     const maxMonthly = useMemo(
         () => Math.max(1, ...monthly.map((m) => m.ferie + m.malattia)),
         [monthly]
@@ -39,9 +53,6 @@ export default function ReportsPage({ year, stats, monthly, roleBreakdown }) {
             { year: newYear },
             { preserveScroll: true, preserveState: true, replace: true }
         );
-
-    const approvalRateLabel =
-        stats.approvalRate == null ? '—' : `${stats.approvalRate}%`;
 
     return (
         <AuthenticatedLayout
@@ -82,32 +93,77 @@ export default function ReportsPage({ year, stats, monthly, roleBreakdown }) {
             <Head title={`Report ${year} · Holidays`} />
 
             <div style={{ display: 'grid', gap: 18 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
                     <StatCard
-                        label={`Ferie ${year}`}
-                        value={`${stats.ferieDays}g`}
-                        hint="approvate"
-                        tone="coral"
+                        label={`Approvate ${year}`}
+                        value={stats.approvedCount}
+                        hint="richieste"
+                        tone="mint"
                     />
                     <StatCard
-                        label={`Permessi ${year}`}
-                        value={`${stats.permessoHours}h`}
-                        hint="erogate"
-                        tone="yellow"
-                    />
-                    <StatCard
-                        label={`Malattia ${year}`}
-                        value={`${stats.malattiaDays}g`}
-                        hint="registrati"
+                        label={`Rifiutate ${year}`}
+                        value={stats.rejectedCount}
+                        hint="richieste"
                         tone="rose"
                     />
                     <StatCard
-                        label="Tasso approvazione"
-                        value={approvalRateLabel}
-                        hint={`${stats.approvedCount}/${stats.approvedCount + stats.rejectedCount} decise`}
-                        tone="mint"
+                        label="In attesa"
+                        value={stats.pendingCount}
+                        hint="da decidere"
+                        tone="yellow"
                     />
                 </div>
+
+                <section className="h-card" style={{ padding: 0 }}>
+                    <div style={{ padding: '14px 20px', borderBottom: 'var(--h-bw) solid var(--h-line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <h3 className="h-heading" style={{ fontSize: 18 }}>Attività recente</h3>
+                            <p className="h-muted" style={{ fontSize: 12, marginTop: 2 }}>
+                                Ultime richieste create o aggiornate.
+                            </p>
+                        </div>
+                        <div className="h-mono h-muted" style={{ fontSize: 11 }}>
+                            {activity.length} {activity.length === 1 ? 'evento' : 'eventi'}
+                        </div>
+                    </div>
+
+                    {activity.length === 0 ? (
+                        <div style={{ padding: 32, textAlign: 'center', color: 'var(--h-muted)', fontSize: 13 }}>
+                            Nessuna attività recente.
+                        </div>
+                    ) : (
+                        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                            {activity.map((a, i) => (
+                                <li
+                                    key={a.id}
+                                    style={{
+                                        padding: '12px 20px',
+                                        borderBottom: i < activity.length - 1 ? '2px solid var(--h-line)' : 'none',
+                                        display: 'flex',
+                                        gap: 12,
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            width: 8,
+                                            height: 40,
+                                            background: ACTIVITY_COLOR[a.kind] || 'var(--h-bg-2)',
+                                            border: '2px solid var(--h-line)',
+                                            flexShrink: 0,
+                                        }}
+                                    />
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontSize: 13 }}>{a.text}</div>
+                                        <div className="h-muted h-mono" style={{ fontSize: 10, marginTop: 2, letterSpacing: '0.04em' }}>
+                                            {fmtActivityDate(a.at)}
+                                        </div>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </section>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 18 }}>
                     <section className="h-card" style={{ padding: 22 }}>

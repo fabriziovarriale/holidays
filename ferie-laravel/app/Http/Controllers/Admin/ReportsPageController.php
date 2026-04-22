@@ -91,20 +91,61 @@ class ReportsPageController extends Controller
             ->where('role', '!=', 'admin')
             ->count();
 
+        $activity = LeaveRequest::query()
+            ->with(['user', 'leaveType'])
+            ->whereIn('status', ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'])
+            ->orderByDesc('updated_at')
+            ->limit(12)
+            ->get()
+            ->map(function (LeaveRequest $r) {
+                $name = $r->user
+                    ? trim(($r->user->first_name ?? '').' '.($r->user->last_name ?? '')) ?: ($r->user->email ?? 'Dipendente')
+                    : 'Dipendente';
+                $typeLabel = $r->leaveType?->description ?? $r->leave_type_code;
+                $qty = (int) $r->requested_units;
+                $unit = $r->leaveType?->unit === 'hours' ? 'h' : 'g';
+
+                $kind = match ($r->status) {
+                    'APPROVED' => 'approved',
+                    'REJECTED' => 'rejected',
+                    'CANCELLED' => 'cancelled',
+                    default => 'pending',
+                };
+
+                $verb = match ($kind) {
+                    'approved' => 'ha avuto approvata',
+                    'rejected' => 'ha avuto rifiutata',
+                    'cancelled' => 'ha annullato',
+                    default => 'ha richiesto',
+                };
+
+                $text = "{$name} {$verb} {$qty}{$unit} di {$typeLabel}";
+
+                return [
+                    'id' => (string) $r->id,
+                    'kind' => $kind,
+                    'text' => $text,
+                    'at' => ($r->updated_at ?? $r->created_at)?->toIso8601String(),
+                ];
+            })
+            ->values()
+            ->all();
+
         return Inertia::render('Reports', [
             'year' => $year,
             'stats' => [
+                'approvedCount' => $approved->count(),
+                'pendingCount' => $pending,
+                'rejectedCount' => $rejected,
                 'ferieDays' => $totalFerieDays,
                 'malattiaDays' => $totalMalattiaDays,
                 'permessoHours' => $totalPermessoHours,
                 'approvalRate' => $approvalRate,
-                'approvedCount' => $approved->count(),
-                'pendingCount' => $pending,
-                'rejectedCount' => $rejected,
                 'activeEmployees' => $activeEmployees,
             ],
             'monthly' => $months,
             'roleBreakdown' => $roleBreakdown,
+            'activity' => $activity,
         ]);
     }
 }
