@@ -406,42 +406,6 @@ function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRe
         )}
       </section>
 
-      {/* Recent history */}
-      <section className="h-card" style={{ padding: 0 }}>
-        <div style={{ padding: '18px 22px', borderBottom: 'var(--h-bw) solid var(--h-line)' }}>
-          <h3 className="h-heading" style={{ fontSize: 20 }}>Decisioni recenti</h3>
-        </div>
-        {[...approvedRequests, ...rejectedRequests].length === 0 ? (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--h-muted)' }}>Nessuna decisione recente</div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="h-table">
-              <thead>
-                <tr>
-                  <th>Dipendente</th>
-                  <th>Tipo</th>
-                  <th>Periodo</th>
-                  <th>Stato</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...approvedRequests, ...rejectedRequests]
-                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                  .slice(0, 8)
-                  .map((r) => (
-                    <tr key={r.id} onClick={() => setDetail(r)} style={{ cursor: 'pointer' }}>
-                      <td>{r.userFullName}</td>
-                      <td><LeaveTypeTag code={r.leaveType} /></td>
-                      <td>{r.startDate} → {r.endDate}</td>
-                      <td><StatusBadge status={r.status} /></td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
       <RequestDetailSlideover
         request={detail}
         show={detail !== null}
