@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 const PATHS = {
   home:      <path d="M3 11L12 3l9 8M5 10v11h4v-6h6v6h4V10" />,
   users:     <><circle cx="9" cy="8" r="4"/><path d="M2 21c0-3.5 3-6 7-6s7 2.5 7 6"/><circle cx="17" cy="9" r="3"/><path d="M15 21c0-2 1.5-4 4-4"/></>,
+  team:      <><circle cx="8" cy="9" r="3"/><circle cx="17" cy="10" r="2.5"/><path d="M2 20c0-3 2.5-5 6-5s6 2 6 5M13 19c.5-2.5 2.5-4 5-4s4 1.5 4.5 4"/></>,
   cal:       <><rect x="3" y="5" width="18" height="16" rx="1"/><path d="M3 9h18M8 3v4M16 3v4"/></>,
   doc:       <><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/></>,
   user:      <><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></>,
