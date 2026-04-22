@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Button from '@/Components/h/Button';
+import Icon from '@/Components/h/Icon';
 import CreateUserSlideover from '@/Components/CreateUserSlideover';
 import UserDetailSlideover from '@/Components/UserDetailSlideover';
 import { Head, usePage, router } from '@inertiajs/react';
@@ -21,7 +23,6 @@ export default function Users({ users, year }) {
         if (status === 'Utente creato.') setCreateSlideoverOpen(false);
     }, [status]);
 
-    // Auto-apre lo slideover dell'utente se passato come query param
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const openUserId = params.get('openUser');
@@ -31,159 +32,122 @@ export default function Users({ users, year }) {
         }
     }, [users]);
 
+    const changeYear = (newYear) =>
+        router.get(
+            route('admin.users.index'),
+            { year: newYear },
+            { preserveScroll: true, preserveState: true }
+        );
+
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <h2 className="text-xl font-semibold leading-tight text-foreground">
-                            Utenti
-                        </h2>
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">Anno</span>
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                    <div>
+                        <div
+                            className="h-mono"
+                            style={{ fontSize: 11, color: 'var(--h-muted)', letterSpacing: '0.1em' }}
+                        >
+                            DIPENDENTI · ANNO {year}
+                        </div>
+                        <h1 className="h-display" style={{ fontSize: 44, marginTop: 4 }}>
+                            Utenti.
+                        </h1>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                            <span className="h-label">Anno</span>
                             <select
                                 value={String(year)}
-                                onChange={(e) => router.get(route('admin.users.index'), { year: e.target.value }, { preserveScroll: true, preserveState: true })}
-                                className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm"
+                                onChange={(e) => changeYear(e.target.value)}
+                                className="h-select"
+                                style={{ width: 100 }}
                             >
                                 {[year - 1, year, year + 1].map((y) => (
                                     <option key={y} value={String(y)}>{y}</option>
                                 ))}
                             </select>
-                        </div>
+                        </label>
+                        <Button variant="primary" onClick={() => setCreateSlideoverOpen(true)}>
+                            <Icon name="plus" size={16} /> Nuovo utente
+                        </Button>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => setCreateSlideoverOpen(true)}
-                        className="inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-                    >
-                        Aggiungi utente
-                    </button>
                 </div>
             }
         >
-            <Head title="Utenti" />
+            <Head title="Utenti · Holidays" />
 
-            <div className="py-6">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="rounded-lg bg-card border border-border p-4 shadow sm:p-6">
-                        {status && (
-                            <p className="mb-4 rounded-md border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400">
-                                {status}
-                            </p>
-                        )}
-                        <p className="mb-4 text-sm text-muted-foreground">
-                            Clicca su una riga per vedere i dettagli e modificare il budget ferie per l&apos;anno {year}.
-                        </p>
-                        {users.length === 0 ? (
-                            <p className="py-8 text-center text-sm text-muted-foreground">Nessun dipendente</p>
-                        ) : (
-                            <>
-                                {/* Card layout — mobile */}
-                                <ul className="space-y-3 sm:hidden">
-                                    {users.map((u) => (
-                                        <li
-                                            key={u.id}
-                                            onClick={() => setSelectedUser(u)}
-                                            className="cursor-pointer rounded-lg border border-border p-3 sm:p-4 hover:bg-accent/50"
-                                        >
-                                            <div className="flex items-start justify-between gap-2">
-                                                <div className="min-w-0">
-                                                    <p className="truncate font-medium text-foreground">
-                                                        {[u.firstName, u.lastName].filter(Boolean).join(' ') || '—'}
-                                                        <span className="mx-2 text-muted-foreground">·</span>
-                                                        <span className="text-sm font-normal text-muted-foreground">
-                                                            {u.email}
-                                                        </span>
-                                                    </p>
-                                                </div>
-                                                {u.jobRole && (
-                                                    <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
-                                                        {u.jobRole}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
-                                                <div className="rounded bg-sky-500/10 px-2 py-1">
-                                                    <p className="text-muted-foreground">Budget</p>
-                                                    <p className="font-semibold text-foreground">{u.allocatedDays}</p>
-                                                </div>
-                                                <div className="rounded bg-amber-500/10 px-2 py-1">
-                                                    <p className="text-muted-foreground">Usati</p>
-                                                    <p className="font-semibold text-foreground">{u.usedDays}</p>
-                                                </div>
-                                                <div className="rounded bg-emerald-500/10 px-2 py-1">
-                                                    <p className="text-muted-foreground">Residui</p>
-                                                    <p className="font-semibold text-foreground">{u.remaining}</p>
-                                                </div>
-                                            </div>
-                                            <div className="mt-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        router.post(route('admin.users.impersonate', u.id));
-                                                    }}
-                                                    className="w-full rounded-md border border-input px-3 py-2 text-xs font-medium text-foreground hover:bg-accent"
-                                                >
-                                                    Entra come dipendente
-                                                </button>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-
-                                {/* Table layout — desktop */}
-                                <div className="hidden overflow-x-auto sm:block">
-                                    <table className="min-w-full divide-y divide-border">
-                                        <thead>
-                                            <tr>
-                                                <th className="px-4 py-2 pl-0 text-left text-xs font-medium uppercase text-muted-foreground">Nome</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Email</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Ruolo</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Budget {year}</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Usati</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Residui</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Azioni</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-border">
-                                            {users.map((u) => (
-                                                <tr
-                                                    key={u.id}
-                                                    onClick={() => setSelectedUser(u)}
-                                                    className="cursor-pointer transition-colors hover:bg-accent"
-                                                >
-                                                    <td className="px-4 py-2 pl-0 text-foreground">
-                                                        {[u.firstName, u.lastName].filter(Boolean).join(' ') || '—'}
-                                                    </td>
-                                                    <td className="px-4 py-2 text-foreground">{u.email}</td>
-                                                    <td className="px-4 py-2 text-foreground">{u.jobRole || '—'}</td>
-                                                    <td className="px-4 py-2 font-medium text-foreground">{u.allocatedDays}</td>
-                                                    <td className="px-4 py-2 text-foreground">{u.usedDays}</td>
-                                                    <td className="px-4 py-2 text-foreground">{u.remaining}</td>
-                                                    <td className="px-4 py-2">
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                router.post(route('admin.users.impersonate', u.id));
-                                                            }}
-                                                            className="rounded-md border border-input px-2 py-1 text-xs font-medium text-foreground hover:bg-accent"
-                                                        >
-                                                            Entra come
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </>
-                        )}
-                    </div>
+            {status && (
+                <div className="h-card" style={{ padding: 14, marginBottom: 18, background: 'var(--h-mint)' }}>
+                    <strong>✓</strong> {status}
                 </div>
-            </div>
+            )}
+
+            <section className="h-card" style={{ padding: 0 }}>
+                <div style={{ padding: '18px 22px', borderBottom: 'var(--h-bw) solid var(--h-line)' }}>
+                    <h3 className="h-heading" style={{ fontSize: 20 }}>Dipendenti</h3>
+                    <p className="h-muted" style={{ fontSize: 13, marginTop: 4 }}>
+                        Clicca una riga per dettagli e budget ferie {year}.
+                    </p>
+                </div>
+
+                {users.length === 0 ? (
+                    <div style={{ padding: 40, textAlign: 'center', color: 'var(--h-muted)' }}>
+                        Nessun dipendente
+                    </div>
+                ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                        <table className="h-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Ruolo</th>
+                                    <th style={{ textAlign: 'right' }}>Budget</th>
+                                    <th style={{ textAlign: 'right' }}>Usati</th>
+                                    <th style={{ textAlign: 'right' }}>Residui</th>
+                                    <th style={{ textAlign: 'right' }}>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {users.map((u) => (
+                                    <tr
+                                        key={u.id}
+                                        onClick={() => setSelectedUser(u)}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        <td>
+                                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                                                <span className="h-avatar xs">{initialsOf(u.firstName, u.lastName)}</span>
+                                                <span style={{ fontWeight: 600 }}>
+                                                    {[u.firstName, u.lastName].filter(Boolean).join(' ') || '—'}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td style={{ color: 'var(--h-muted)' }}>{u.email}</td>
+                                        <td>{u.jobRole ? <span className="h-chip">{u.jobRole}</span> : <span className="h-muted">—</span>}</td>
+                                        <td className="h-mono" style={{ textAlign: 'right', fontWeight: 700 }}>{u.allocatedDays}</td>
+                                        <td className="h-mono" style={{ textAlign: 'right' }}>{u.usedDays}</td>
+                                        <td className="h-mono" style={{ textAlign: 'right', fontWeight: 700 }}>{u.remaining}</td>
+                                        <td style={{ textAlign: 'right' }}>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    router.post(route('admin.users.impersonate', u.id));
+                                                }}
+                                                className="h-btn h-btn-sm h-btn-ghost"
+                                            >
+                                                Entra come
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
 
             <CreateUserSlideover
                 show={createSlideoverOpen}
@@ -197,4 +161,10 @@ export default function Users({ users, year }) {
             />
         </AuthenticatedLayout>
     );
+}
+
+function initialsOf(firstName, lastName) {
+    const a = (firstName?.[0] || '').toUpperCase();
+    const b = (lastName?.[0] || '').toUpperCase();
+    return (a + b) || '—';
 }
