@@ -1,5 +1,6 @@
 import Button from '@/Components/h/Button';
 import Icon from '@/Components/h/Icon';
+import Select from '@/Components/h/Select';
 import Slideover from '@/Components/Slideover';
 import { useForm } from '@inertiajs/react';
 
@@ -97,17 +98,13 @@ export default function CreateUserSlideover({ show, onClose }) {
                     <label htmlFor="jobRole" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
                         Ruolo professionale
                     </label>
-                    <select
+                    <Select
                         id="jobRole"
-                        className="h-select"
                         value={data.jobRole}
-                        onChange={(e) => setData('jobRole', e.target.value)}
-                    >
-                        <option value="">Seleziona ruolo…</option>
-                        {JOB_ROLES.map((r) => (
-                            <option key={r} value={r}>{r}</option>
-                        ))}
-                    </select>
+                        onChange={(v) => setData('jobRole', v)}
+                        options={JOB_ROLES}
+                        placeholder="Seleziona ruolo…"
+                    />
                     <FieldError message={errors.jobRole} />
                 </div>
 

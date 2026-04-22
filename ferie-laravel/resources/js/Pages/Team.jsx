@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/h/Icon';
 import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
+import Select from '@/Components/h/Select';
 import { Head, router } from '@inertiajs/react';
 import { useMemo } from 'react';
 
@@ -67,17 +68,15 @@ export default function TeamPage({ team, todayOff, upcoming, windowFrom, windowT
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                         <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                             <span className="h-label">Ruolo</span>
-                            <select
-                                className="h-select"
+                            <Select
                                 value={activeRole}
-                                onChange={(e) => changeRole(e.target.value)}
-                                style={{ width: 160 }}
-                            >
-                                <option value="ALL">Tutti</option>
-                                {roles.map((r) => (
-                                    <option key={r} value={r}>{r}</option>
-                                ))}
-                            </select>
+                                onChange={(v) => changeRole(v)}
+                                options={[
+                                    { value: 'ALL', label: 'Tutti' },
+                                    ...roles.map((r) => ({ value: r, label: r })),
+                                ]}
+                                style={{ width: 180 }}
+                            />
                         </label>
                     </div>
                 </div>

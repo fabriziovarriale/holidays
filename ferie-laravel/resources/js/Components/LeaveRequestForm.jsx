@@ -1,6 +1,7 @@
 import Button from '@/Components/h/Button';
 import Icon from '@/Components/h/Icon';
 import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
+import Select from '@/Components/h/Select';
 import DatePickerField, { parseYmdToLocalDate } from '@/Components/DatePickerField';
 import SlideoverAlert from '@/Components/SlideoverAlert';
 import { useForm, usePage } from '@inertiajs/react';
@@ -171,16 +172,13 @@ export default function LeaveRequestForm({
                     <FieldLabel htmlFor="userId">Dipendente</FieldLabel>
                     {hasEmployees ? (
                         <>
-                            <select
+                            <Select
                                 id="userId"
-                                className="h-select"
                                 value={data.userId}
-                                onChange={(e) => setData('userId', e.target.value)}
-                            >
-                                {employeesList.map((emp) => (
-                                    <option key={emp.id} value={emp.id}>{emp.label}</option>
-                                ))}
-                            </select>
+                                onChange={(v) => setData('userId', v)}
+                                options={employeesList.map((emp) => ({ value: emp.id, label: emp.label }))}
+                                placeholder="Seleziona dipendente…"
+                            />
                             <FieldError message={errors.userId} />
                         </>
                     ) : (

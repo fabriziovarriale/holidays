@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Button from '@/Components/h/Button';
 import Icon from '@/Components/h/Icon';
 import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
+import Select from '@/Components/h/Select';
 import StatusBadge from '@/Components/h/StatusBadge';
 import RequestDetailSlideover from '@/Components/RequestDetailSlideover';
 import { Head, router } from '@inertiajs/react';
@@ -137,17 +138,15 @@ export default function RequestsPage({ isAdmin, requests, leaveTypes, filters })
                     </div>
 
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <select
-                            className="h-select"
+                        <Select
                             value={activeType}
-                            onChange={(e) => applyFilter({ type: e.target.value })}
-                            style={{ width: 160 }}
-                        >
-                            <option value="ALL">Tutti i tipi</option>
-                            {leaveTypes.map((lt) => (
-                                <option key={lt.code} value={lt.code}>{lt.label}</option>
-                            ))}
-                        </select>
+                            onChange={(v) => applyFilter({ type: v })}
+                            options={[
+                                { value: 'ALL', label: 'Tutti i tipi' },
+                                ...leaveTypes.map((lt) => ({ value: lt.code, label: lt.label })),
+                            ]}
+                            style={{ width: 180 }}
+                        />
 
                         <form onSubmit={handleSearch} style={{ display: 'flex', gap: 6 }}>
                             <input

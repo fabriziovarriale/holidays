@@ -1,4 +1,5 @@
 import Button from '@/Components/h/Button';
+import Select from '@/Components/h/Select';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
@@ -53,19 +54,13 @@ export default function Register() {
                 </div>
 
                 <Field label="Ruolo" htmlFor="job_role" error={errors.job_role}>
-                    <select
+                    <Select
                         id="job_role"
-                        name="job_role"
                         value={data.job_role}
-                        onChange={(e) => setData('job_role', e.target.value)}
-                        required
-                        className="h-select"
-                    >
-                        <option value="">Seleziona ruolo…</option>
-                        {JOB_ROLES.map((r) => (
-                            <option key={r} value={r}>{r}</option>
-                        ))}
-                    </select>
+                        onChange={(v) => setData('job_role', v)}
+                        options={JOB_ROLES}
+                        placeholder="Seleziona ruolo…"
+                    />
                 </Field>
 
                 <Field label="Email" htmlFor="email" error={errors.email}>

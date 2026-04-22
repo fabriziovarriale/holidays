@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Button from '@/Components/h/Button';
 import Icon from '@/Components/h/Icon';
+import Select from '@/Components/h/Select';
 import CreateUserSlideover from '@/Components/CreateUserSlideover';
 import UserDetailSlideover from '@/Components/UserDetailSlideover';
 import { Head, usePage, router } from '@inertiajs/react';
@@ -57,16 +58,15 @@ export default function Users({ users, year }) {
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                         <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                             <span className="h-label">Anno</span>
-                            <select
+                            <Select
                                 value={String(year)}
-                                onChange={(e) => changeYear(e.target.value)}
-                                className="h-select"
-                                style={{ width: 100 }}
-                            >
-                                {[year - 1, year, year + 1].map((y) => (
-                                    <option key={y} value={String(y)}>{y}</option>
-                                ))}
-                            </select>
+                                onChange={(v) => changeYear(v)}
+                                options={[year - 1, year, year + 1].map((y) => ({
+                                    value: String(y),
+                                    label: String(y),
+                                }))}
+                                style={{ width: 120 }}
+                            />
                         </label>
                         <Button variant="primary" onClick={() => setCreateSlideoverOpen(true)}>
                             <Icon name="plus" size={16} /> Nuovo utente
