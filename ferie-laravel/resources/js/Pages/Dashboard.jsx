@@ -1,529 +1,458 @@
+import { Head, usePage, router } from '@inertiajs/react';
+import { useState, useEffect, useMemo } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import ApprovedLeaveImpactCalendar from '@/Components/ApprovedLeaveImpactCalendar';
-import ConfirmDialog from '@/Components/ConfirmDialog';
+import Icon from '@/Components/h/Icon';
+import Button from '@/Components/h/Button';
+import StatusBadge from '@/Components/h/StatusBadge';
+import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
+import StatCard from '@/Components/h/StatCard';
+import BalanceRing from '@/Components/h/BalanceRing';
 import CreateRequestSlideover from '@/Components/CreateRequestSlideover';
 import RequestDetailSlideover from '@/Components/RequestDetailSlideover';
-import { Head, usePage, router } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import ConfirmDialog from '@/Components/ConfirmDialog';
+import ApprovedLeaveImpactCalendar from '@/Components/ApprovedLeaveImpactCalendar';
 
 export default function Dashboard({
-    user,
-    year,
-    leaveTypes,
-    employeeBalance,
-    employeeBalanceForLeaveStore = null,
-    leaveStoreYear = new Date().getFullYear(),
-    employeeRequests,
-    employees = [],
-    employeesWithBalances = {},
-    approvedLeaveCalendar = [],
-    companyHolidays = [],
-    isAdmin = false,
-    pendingRequests = [],
-    approvedRequests = [],
-    approvedMeta = null,
-    rejectedRequests = [],
-    rejectedMeta = null,
+  user,
+  year,
+  leaveTypes,
+  employeeBalance,
+  employeeBalanceForLeaveStore = null,
+  leaveStoreYear = new Date().getFullYear(),
+  employeeRequests = [],
+  employees = [],
+  employeesWithBalances = {},
+  approvedLeaveCalendar = [],
+  companyHolidays = [],
+  isAdmin = false,
+  pendingRequests = [],
+  approvedRequests = [],
+  approvedMeta = null,
+  rejectedRequests = [],
+  rejectedMeta = null,
 }) {
-    const { errors = {}, flash = {}, impersonation = {} } = usePage().props;
-    const [createSlideoverOpen, setCreateSlideoverOpen] = useState(false);
+  const { errors = {}, flash = {}, auth } = usePage().props;
+  const pageUser = auth?.user ?? user;
+  const [createOpen, setCreateOpen] = useState(false);
 
-    const showFlashStatus =
-        Boolean(flash.status) &&
-        !(
-            impersonation?.active &&
-            typeof flash.status === 'string' &&
-            flash.status.toLowerCase().includes('impersonaz')
-        );
+  const hasLeaveErrors = ['leaveType', 'startDate', 'endDate', 'requestedUnits', 'note', 'userId']
+    .some((k) => errors?.[k]);
+  useEffect(() => { if (hasLeaveErrors) setCreateOpen(true); }, [hasLeaveErrors]);
 
-    const hasLeaveErrors = ['leaveType', 'startDate', 'endDate', 'requestedUnits', 'note', 'userId'].some((k) => errors?.[k]);
-    useEffect(() => {
-        if (hasLeaveErrors) setCreateSlideoverOpen(true);
-    }, [hasLeaveErrors]);
-
-
-    return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="text-xl font-semibold leading-tight text-foreground">
-                        Dashboard
-                    </h2>
-                    <div className="flex items-center gap-2">
-                        {isAdmin && (
-                            <a
-                                href={route('admin.reports.export-leaves', { year: Number(year || new Date().getFullYear()) })}
-                                className="inline-flex shrink-0 items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
-                                aria-label="Esporta CSV"
-                                title="Esporta CSV"
-                            >
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" aria-hidden="true">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v12m0 0l4-4m-4 4l-4-4M4 17v1a3 3 0 003 3h10a3 3 0 003-3v-1" />
-                                </svg>
-                                <span className="hidden sm:inline">Esporta CSV</span>
-                            </a>
-                        )}
-                        <button
-                            type="button"
-                            onClick={() => setCreateSlideoverOpen(true)}
-                            className="inline-flex shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-                        >
-                            Crea richiesta
-                        </button>
-                    </div>
-                </div>
-            }
-        >
-            <Head title="Dashboard - Ferie" />
-
-            <div className="py-6">
-                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
-                    {showFlashStatus && (
-                        <div className="rounded-md bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
-                            {flash.status}
-                        </div>
-                    )}
-                    {isAdmin ? (
-                        <AdminView
-                            pendingRequests={pendingRequests}
-                            approvedRequests={approvedRequests}
-                            approvedMeta={approvedMeta}
-                            rejectedRequests={rejectedRequests}
-                            rejectedMeta={rejectedMeta}
-                        />
-                    ) : (
-                        <EmployeeView
-                            balance={employeeBalance}
-                            requests={employeeRequests}
-                        />
-                    )}
-                    <ApprovedLeaveImpactCalendar approvedEntries={approvedLeaveCalendar} holidays={companyHolidays} />
-                </div>
+  return (
+    <AuthenticatedLayout
+      header={
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div>
+            <div className="h-mono" style={{ fontSize: 11, color: 'var(--h-muted)', letterSpacing: '0.1em' }}>
+              {new Date().toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
             </div>
-
-            <CreateRequestSlideover
-                show={createSlideoverOpen}
-                onClose={() => setCreateSlideoverOpen(false)}
-                leaveTypes={leaveTypes}
-                employeeBalance={employeeBalance}
-                employeeBalanceForLeaveStore={employeeBalanceForLeaveStore}
-                leaveStoreYear={leaveStoreYear}
-                employees={employees}
-                employeesWithBalances={employeesWithBalances}
-                isAdmin={isAdmin}
-                errors={errors}
-            />
-        </AuthenticatedLayout>
-    );
-}
-
-function BalanceBar({ balance }) {
-    if (!balance || !balance.total) return null;
-    const usedPct = Math.min(100, Math.round((balance.used / balance.total) * 100));
-    const remainingPct = 100 - usedPct;
-    return (
-        <div className="rounded-lg border border-border bg-card p-4 shadow">
-            <div className="mb-2 flex justify-between text-sm">
-                <span className="font-medium text-foreground">Saldo ferie {new Date().getFullYear()}</span>
-                <span className="text-muted-foreground">{balance.remaining} / {balance.total} residui</span>
-            </div>
-            <div className="flex h-4 w-full overflow-hidden rounded-full bg-muted">
-                {usedPct > 0 && (
-                    <div
-                        className="h-full bg-amber-500 transition-all"
-                        style={{ width: `${usedPct}%` }}
-                        title={`Usati: ${balance.used}`}
-                    />
-                )}
-                {remainingPct > 0 && (
-                    <div
-                        className="h-full bg-emerald-500 transition-all"
-                        style={{ width: `${remainingPct}%` }}
-                        title={`Residui: ${balance.remaining}`}
-                    />
-                )}
-            </div>
-            <div className="mt-1 flex gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                    <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />
-                    Usati: {balance.used}
-                </span>
-                <span className="flex items-center gap-1">
-                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-                    Residui: {balance.remaining}
-                </span>
-                <span className="flex items-center gap-1">
-                    Totale: {balance.total}
-                </span>
-            </div>
-        </div>
-    );
-}
-
-function EmployeeView({ balance, requests }) {
-    const [pendingCancelId, setPendingCancelId] = useState(null);
-    const [cancelProcessing, setCancelProcessing] = useState(false);
-    const [selectedRequest, setSelectedRequest] = useState(null);
-    const [detailSlideoverOpen, setDetailSlideoverOpen] = useState(false);
-
-    const openDetail = (r) => {
-        setSelectedRequest(r);
-        setDetailSlideoverOpen(true);
-    };
-
-    const closeDetail = () => {
-        setDetailSlideoverOpen(false);
-        setSelectedRequest(null);
-    };
-
-    const handleCancel = () => {
-        if (!pendingCancelId) return;
-        setCancelProcessing(true);
-        router.patch(route('leave-request.cancel', pendingCancelId), {}, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setCancelProcessing(false);
-                setPendingCancelId(null);
-                if (selectedRequest?.id === pendingCancelId) {
-                    closeDetail();
-                }
-            },
-            onError: () => setCancelProcessing(false),
-        });
-    };
-
-    return (
-        <div className="space-y-6">
-            <BalanceBar balance={balance} />
-
-            <section className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-lg border-l-4 border-l-primary bg-primary/10 p-3 sm:p-4">
-                    <p className="text-sm text-muted-foreground">Giorni totali</p>
-                    <p className="text-2xl font-semibold text-foreground">{balance?.total ?? '-'}</p>
-                </div>
-                <div className="rounded-lg border-l-4 border-l-amber-500 bg-amber-500/10 p-3 sm:p-4">
-                    <p className="text-sm text-muted-foreground">Giorni usati</p>
-                    <p className="text-2xl font-semibold text-foreground">{balance?.used ?? '-'}</p>
-                </div>
-                <div className="rounded-lg border-l-4 border-l-emerald-500 bg-emerald-500/10 p-3 sm:p-4">
-                    <p className="text-sm text-muted-foreground">Giorni residui</p>
-                    <p className="text-2xl font-semibold text-foreground">{balance?.remaining ?? '-'}</p>
-                </div>
-            </section>
-
-            <div className="rounded-lg bg-card border border-border p-4 shadow sm:p-6">
-                <h3 className="text-lg font-medium text-foreground">Storico richieste</h3>
-                <p className="mb-4 text-sm text-muted-foreground">Elenco richieste con stato</p>
-
-                {requests.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-muted-foreground">Nessuna richiesta</p>
-                ) : (
-                    <>
-                        {/* Card layout — mobile */}
-                        <ul className="space-y-3 sm:hidden">
-                            {requests.map((r) => (
-                                <li
-                                    key={r.id}
-                                    role="button"
-                                    tabIndex={0}
-                                    onClick={() => openDetail(r)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            e.preventDefault();
-                                            openDetail(r);
-                                        }
-                                    }}
-                                    className="cursor-pointer rounded-lg border border-border p-3 sm:p-4 outline-none hover:bg-accent/50"
-                                >
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div>
-                                            <p className="font-medium text-foreground">{r.leaveType}</p>
-                                            <p className="mt-0.5 text-sm text-muted-foreground">
-                                                {r.startDate} — {r.endDate}
-                                            </p>
-                                        </div>
-                                        <StatusBadge status={r.status} />
-                                    </div>
-                                    {r.noteAdmin && (
-                                        <p className="mt-2 text-xs italic text-muted-foreground">
-                                            Nota: {r.noteAdmin}
-                                        </p>
-                                    )}
-                                    {r.status === 'PENDING' && (
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setPendingCancelId(r.id);
-                                            }}
-                                            className="mt-3 text-xs text-destructive hover:underline"
-                                        >
-                                            Annulla richiesta
-                                        </button>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
-
-                        {/* Table layout — desktop */}
-                        <div className="hidden overflow-x-auto sm:block">
-                            <table className="min-w-full divide-y divide-border">
-                                <thead>
-                                    <tr>
-                                        <th className="px-4 py-2 pl-0 text-left text-xs font-medium uppercase text-muted-foreground">Tipo</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Inizio</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Fine</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Stato</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Note admin</th>
-                                        <th className="px-4 py-2"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                    {requests.map((r) => (
-                                        <tr
-                                            key={r.id}
-                                            role="button"
-                                            tabIndex={0}
-                                            onClick={() => openDetail(r)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    openDetail(r);
-                                                }
-                                            }}
-                                            className="cursor-pointer outline-none transition-colors hover:bg-accent"
-                                        >
-                                            <td className="px-4 py-2 pl-0 text-foreground">{r.leaveType}</td>
-                                            <td className="px-4 py-2 text-foreground">{r.startDate}</td>
-                                            <td className="px-4 py-2 text-foreground">{r.endDate}</td>
-                                            <td className="px-4 py-2"><StatusBadge status={r.status} /></td>
-                                            <td className="px-4 py-2 text-sm text-muted-foreground">
-                                                {r.noteAdmin ? <span className="italic">{r.noteAdmin}</span> : '—'}
-                                            </td>
-                                            <td className="px-4 py-2">
-                                                {r.status === 'PENDING' && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setPendingCancelId(r.id);
-                                                        }}
-                                                        className="text-xs text-destructive hover:underline"
-                                                    >
-                                                        Annulla
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </>
-                )}
-            </div>
-
-            <ConfirmDialog
-                show={pendingCancelId !== null}
-                title="Annulla richiesta"
-                message="Annullare questa richiesta? L'operazione non può essere disfatta."
-                confirmLabel="Sì, annulla"
-                cancelLabel="Indietro"
-                destructive
-                processing={cancelProcessing}
-                onConfirm={handleCancel}
-                onCancel={() => setPendingCancelId(null)}
-            />
-
-            <RequestDetailSlideover
-                request={selectedRequest}
-                show={detailSlideoverOpen}
-                onClose={closeDetail}
-                variant="employee"
-            />
-        </div>
-    );
-}
-
-function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRequests, rejectedMeta }) {
-    const { flash = {} } = usePage().props;
-    const [selectedRequest, setSelectedRequest] = useState(null);
-    const [detailSlideoverOpen, setDetailSlideoverOpen] = useState(false);
-
-    const allRequests = [...pendingRequests, ...approvedRequests, ...rejectedRequests].sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    );
-
-    const openDetail = (r) => {
-        setSelectedRequest(r);
-        setDetailSlideoverOpen(true);
-    };
-
-    const closeDetail = () => {
-        setDetailSlideoverOpen(false);
-        setSelectedRequest(null);
-    };
-
-    useEffect(() => {
-        const s = flash?.status;
-        if (s && (s.includes('approvata') || s.includes('rifiutata'))) {
-            setDetailSlideoverOpen(false);
-            setSelectedRequest(null);
-        }
-    }, [flash?.status]);
-
-    return (
-        <div className="space-y-6">
-            <section className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-lg border-l-4 border-l-amber-500 bg-amber-500/10 p-3 sm:p-4">
-                    <p className="text-sm text-muted-foreground">Richieste in attesa</p>
-                    <p className="text-2xl font-semibold text-foreground">{pendingRequests.length}</p>
-                </div>
-                <div className="rounded-lg border-l-4 border-l-emerald-500 bg-emerald-500/10 p-3 sm:p-4">
-                    <p className="text-sm text-muted-foreground">Richieste approvate</p>
-                    <p className="text-2xl font-semibold text-foreground">{approvedRequests.length}</p>
-                </div>
-                <div className="rounded-lg border-l-4 border-l-rose-500 bg-rose-500/10 p-3 sm:p-4">
-                    <p className="text-sm text-muted-foreground">Richieste rifiutate</p>
-                    <p className="text-2xl font-semibold text-foreground">{rejectedRequests.length}</p>
-                </div>
-            </section>
-
-            <div className="rounded-lg bg-card border border-border p-4 shadow sm:p-6">
-                <div className="mb-4">
-                    <h3 className="text-lg font-medium text-foreground">Richieste</h3>
-                    <p className="text-sm text-muted-foreground">Elenco di tutte le richieste con stato</p>
-                </div>
-
-                {allRequests.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-muted-foreground">Nessuna richiesta</p>
-                ) : (
-                    <>
-                        {/* Card layout — mobile */}
-                        <ul className="space-y-3 sm:hidden">
-                            {allRequests.map((r) => (
-                                <li
-                                    key={r.id}
-                                    onClick={() => openDetail(r)}
-                                    className="cursor-pointer rounded-lg border border-border p-3 sm:p-4 hover:bg-accent/50"
-                                >
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div>
-                                            <p className="font-medium text-foreground">{r.userFullName}</p>
-                                            <p className="mt-0.5 text-sm text-muted-foreground">
-                                                {r.leaveType} · {r.startDate} — {r.endDate}
-                                            </p>
-                                        </div>
-                                        <StatusBadge status={r.status} />
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-
-                        {/* Table layout — desktop */}
-                        <div className="hidden overflow-x-auto sm:block">
-                            <table className="min-w-full divide-y divide-border">
-                                <thead>
-                                    <tr>
-                                        <th className="px-4 py-2 pl-0 text-left text-xs font-medium uppercase text-muted-foreground">Dipendente</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Tipo</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Periodo</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Stato</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                    {allRequests.map((r) => (
-                                        <tr
-                                            key={r.id}
-                                            onClick={() => openDetail(r)}
-                                            className="cursor-pointer transition-colors hover:bg-accent"
-                                        >
-                                            <td className="px-4 py-2 pl-0 text-foreground">{r.userFullName}</td>
-                                            <td className="px-4 py-2 text-foreground">{r.leaveType}</td>
-                                            <td className="px-4 py-2 text-foreground">{r.startDate} - {r.endDate}</td>
-                                            <td className="px-4 py-2"><StatusBadge status={r.status} /></td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </>
-                )}
-            </div>
-
-            {(approvedMeta || rejectedMeta) && (
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    {approvedMeta && approvedMeta.lastPage > 1 && (
-                        <PaginationBar
-                            label="Approvate"
-                            meta={approvedMeta}
-                            pageParam="approved_page"
-                        />
-                    )}
-                    {rejectedMeta && rejectedMeta.lastPage > 1 && (
-                        <PaginationBar
-                            label="Rifiutate"
-                            meta={rejectedMeta}
-                            pageParam="rejected_page"
-                        />
-                    )}
-                </div>
+            <h1 className="h-display" style={{ fontSize: 44, marginTop: 4 }}>
+              Ciao, {pageUser?.name?.split(' ')?.[0] || 'team'}.
+            </h1>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {isAdmin && (
+              <a
+                href={route('admin.reports.export-leaves', { year: Number(year || new Date().getFullYear()) })}
+                className="h-btn h-btn-sm"
+              >
+                <Icon name="download" size={16} /> Esporta CSV
+              </a>
             )}
-
-            <RequestDetailSlideover
-                request={selectedRequest}
-                show={detailSlideoverOpen}
-                onClose={closeDetail}
-            />
+            <Button variant="primary" onClick={() => setCreateOpen(true)}>
+              <Icon name="plus" size={16} /> Nuova richiesta
+            </Button>
+          </div>
         </div>
-    );
+      }
+    >
+      <Head title="Dashboard · Holidays" />
+
+      {flash?.status && (
+        <div className="h-card" style={{ padding: 14, marginBottom: 18, background: 'var(--h-mint)' }}>
+          <strong>✓</strong> {flash.status}
+        </div>
+      )}
+
+      {isAdmin
+        ? <AdminView
+            pendingRequests={pendingRequests}
+            approvedRequests={approvedRequests}
+            approvedMeta={approvedMeta}
+            rejectedRequests={rejectedRequests}
+            rejectedMeta={rejectedMeta}
+            employeesWithBalances={employeesWithBalances}
+          />
+        : <EmployeeView
+            balance={employeeBalance}
+            requests={employeeRequests}
+            holidays={companyHolidays}
+          />}
+
+      <div style={{ marginTop: 28 }}>
+        <ApprovedLeaveImpactCalendar approvedEntries={approvedLeaveCalendar} holidays={companyHolidays} />
+      </div>
+
+      <CreateRequestSlideover
+        show={createOpen}
+        onClose={() => setCreateOpen(false)}
+        leaveTypes={leaveTypes}
+        employeeBalance={employeeBalance}
+        employeeBalanceForLeaveStore={employeeBalanceForLeaveStore}
+        leaveStoreYear={leaveStoreYear}
+        employees={employees}
+        employeesWithBalances={employeesWithBalances}
+        isAdmin={isAdmin}
+        errors={errors}
+      />
+    </AuthenticatedLayout>
+  );
 }
 
-function PaginationBar({ label, meta, pageParam }) {
-    const goTo = (page) => {
-        router.get(route('dashboard'), { [pageParam]: page }, { preserveScroll: true, preserveState: true });
-    };
-    return (
-        <div className="flex items-center gap-2 rounded border border-border bg-card px-3 py-2">
-            <span className="font-medium">{label}:</span>
-            <span>{meta.total} totali</span>
-            <button
-                type="button"
-                disabled={meta.currentPage <= 1}
-                onClick={() => goTo(meta.currentPage - 1)}
-                className="rounded px-1 hover:bg-accent disabled:opacity-30"
-            >
-                ‹
-            </button>
-            <span>{meta.currentPage}/{meta.lastPage}</span>
-            <button
-                type="button"
-                disabled={meta.currentPage >= meta.lastPage}
-                onClick={() => goTo(meta.currentPage + 1)}
-                className="rounded px-1 hover:bg-accent disabled:opacity-30"
-            >
-                ›
-            </button>
+/* —————————————————————————————————————————————— EMPLOYEE VIEW */
+
+function EmployeeView({ balance, requests, holidays }) {
+  const [pendingCancelId, setPendingCancelId] = useState(null);
+  const [cancelProcessing, setCancelProcessing] = useState(false);
+  const [detail, setDetail] = useState(null);
+
+  const total      = balance?.total ?? 0;
+  const used       = balance?.used ?? 0;
+  const pendingCnt = balance?.pending ?? 0;
+  const remaining  = balance?.remaining ?? (total - used - pendingCnt);
+
+  const upcoming = useMemo(
+    () => requests.filter((r) => r.status === 'APPROVED' && new Date(r.startDate) >= new Date()).slice(0, 3),
+    [requests]
+  );
+  const nextHoliday = (holidays || []).find((h) => new Date(h.date) >= new Date());
+
+  const handleCancel = () => {
+    if (!pendingCancelId) return;
+    setCancelProcessing(true);
+    router.patch(route('leave-request.cancel', pendingCancelId), {}, {
+      preserveScroll: true,
+      onFinish: () => { setCancelProcessing(false); setPendingCancelId(null); },
+    });
+  };
+
+  return (
+    <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1.2fr 1fr' }}>
+      {/* Balance card */}
+      <section className="h-card" style={{ padding: 22, background: 'var(--h-ink)', color: 'var(--h-bg)' }}>
+        <div className="h-label" style={{ opacity: 0.7 }}>SALDO FERIE {new Date().getFullYear()}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 22, marginTop: 14 }}>
+          <BalanceRing total={total} used={used} pending={pendingCnt} remaining={remaining} />
+          <div style={{ display: 'grid', gap: 10, flex: 1 }}>
+            <LegendRow dot="var(--h-coral)" label="Usati"    value={used} />
+            <LegendRow dot="var(--h-yellow)" label="In attesa" value={pendingCnt} />
+            <LegendRow dot="var(--h-mint)"  label="Residui"  value={remaining} />
+            <div style={{ borderTop: '2px solid var(--h-bg)', paddingTop: 8, fontSize: 12, opacity: 0.8 }}>
+              Totale maturato: <strong>{total}</strong> giorni
+            </div>
+          </div>
         </div>
-    );
+      </section>
+
+      {/* Upcoming + next holiday */}
+      <section style={{ display: 'grid', gap: 18 }}>
+        <div className="h-card" style={{ padding: 18 }}>
+          <div className="h-label">PROSSIME ASSENZE APPROVATE</div>
+          <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
+            {upcoming.length === 0 ? (
+              <div style={{ color: 'var(--h-muted)', fontSize: 13 }}>Nessuna assenza pianificata.</div>
+            ) : upcoming.map((r) => (
+              <button
+                key={r.id}
+                onClick={() => setDetail(r)}
+                className="h-card-flat"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: 10,
+                  border: '2px solid var(--h-line)',
+                  borderRadius: 'var(--h-radius)',
+                  background: 'var(--h-surface)',
+                  cursor: 'pointer', textAlign: 'left',
+                }}
+              >
+                <DateChip date={r.startDate} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <LeaveTypeTag code={r.leaveType} />
+                  </div>
+                  <div style={{ fontSize: 13, marginTop: 2 }}>
+                    {r.startDate} → {r.endDate}
+                  </div>
+                </div>
+                <Icon name="chevR" size={16} />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {nextHoliday && (
+          <div className="h-card" style={{ padding: 14, background: 'var(--h-yellow)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Icon name="sparkle" size={20} />
+              <div style={{ flex: 1 }}>
+                <div className="h-label">PROSSIMA FESTIVITÀ</div>
+                <div style={{ fontWeight: 700, marginTop: 2 }}>{nextHoliday.name}</div>
+              </div>
+              <div className="h-mono" style={{ fontSize: 13, fontWeight: 700 }}>{nextHoliday.date}</div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Storico richieste */}
+      <section className="h-card" style={{ padding: 0, gridColumn: '1 / -1' }}>
+        <div style={{ padding: '18px 22px', borderBottom: 'var(--h-bw) solid var(--h-line)' }}>
+          <h3 className="h-heading" style={{ fontSize: 20 }}>Storico richieste</h3>
+        </div>
+
+        {requests.length === 0 ? (
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--h-muted)' }}>Nessuna richiesta</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="h-table">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Periodo</th>
+                  <th>Inviata</th>
+                  <th>Stato</th>
+                  <th>Note admin</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((r) => (
+                  <tr key={r.id} onClick={() => setDetail(r)} style={{ cursor: 'pointer' }}>
+                    <td><LeaveTypeTag code={r.leaveType} /></td>
+                    <td>{r.startDate} → {r.endDate}</td>
+                    <td className="h-mono" style={{ fontSize: 13 }}>{r.createdAt || '—'}</td>
+                    <td><StatusBadge status={r.status} /></td>
+                    <td style={{ fontSize: 13, color: 'var(--h-muted)', fontStyle: r.noteAdmin ? 'italic' : 'normal' }}>
+                      {r.noteAdmin || '—'}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      {r.status === 'PENDING' && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setPendingCancelId(r.id); }}
+                          className="h-btn h-btn-sm h-btn-ghost"
+                          style={{ color: 'var(--h-err)' }}
+                        >
+                          Annulla
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <ConfirmDialog
+        show={pendingCancelId !== null}
+        title="Annulla richiesta"
+        message="Annullare questa richiesta? L'operazione non può essere disfatta."
+        confirmLabel="Sì, annulla"
+        cancelLabel="Indietro"
+        destructive
+        processing={cancelProcessing}
+        onConfirm={handleCancel}
+        onCancel={() => setPendingCancelId(null)}
+      />
+      <RequestDetailSlideover
+        request={detail}
+        show={detail !== null}
+        onClose={() => setDetail(null)}
+        variant="employee"
+      />
+    </div>
+  );
 }
 
-function StatusBadge({ status }) {
-    const styles = {
-        PENDING: 'bg-amber-500/20 text-amber-600 dark:text-amber-400',
-        APPROVED: 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
-        REJECTED: 'bg-destructive/20 text-destructive',
-        CANCELLED: 'bg-muted text-muted-foreground',
-    };
-    const labels = {
-        PENDING: 'In attesa',
-        APPROVED: 'Approvata',
-        REJECTED: 'Rifiutata',
-        CANCELLED: 'Annullata',
-    };
-    return (
-        <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status] || 'bg-gray-100'}`}>
-            {labels[status] || status}
-        </span>
-    );
+function LegendRow({ dot, label, value }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <span style={{ width: 10, height: 10, borderRadius: 2, background: dot }} />
+      <span style={{ flex: 1, fontSize: 13 }}>{label}</span>
+      <strong className="h-mono" style={{ fontSize: 15 }}>{value}</strong>
+    </div>
+  );
+}
+
+function DateChip({ date }) {
+  const d = new Date(date);
+  const day = d.getDate();
+  const mon = d.toLocaleDateString('it-IT', { month: 'short' }).toUpperCase();
+  return (
+    <div style={{
+      minWidth: 54, border: '2px solid var(--h-line)', borderRadius: 'var(--h-radius)',
+      background: 'var(--h-coral)', color: 'var(--h-ink)', padding: '4px 8px',
+      textAlign: 'center',
+    }}>
+      <div className="h-mono" style={{ fontSize: 10 }}>{mon}</div>
+      <div className="h-display" style={{ fontSize: 22, lineHeight: 1 }}>{day}</div>
+    </div>
+  );
+}
+
+/* —————————————————————————————————————————————— ADMIN VIEW */
+
+function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRequests, rejectedMeta, employeesWithBalances }) {
+  const [detail, setDetail] = useState(null);
+
+  const employeesCount = Object.keys(employeesWithBalances || {}).length || 8;
+  const today = new Date();
+  const outToday = (pendingRequests.concat(approvedRequests))
+    .filter((r) => r.status === 'APPROVED' &&
+      new Date(r.startDate) <= today && new Date(r.endDate) >= today).length;
+
+  const approved = approvedMeta?.total ?? approvedRequests.length;
+  const rejected = rejectedMeta?.total ?? rejectedRequests.length;
+  const totalDecided = approved + rejected;
+  const approvalRate = totalDecided > 0 ? Math.round((approved / totalDecided) * 100) : 100;
+
+  return (
+    <div style={{ display: 'grid', gap: 18 }}>
+      {/* StatCards */}
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+        <StatCard label="IN ATTESA"     value={pendingRequests.length} tone="yellow" />
+        <StatCard label="OGGI IN UFFICIO" value={`${Math.max(0, employeesCount - outToday)}/${employeesCount}`} tone="mint" />
+        <StatCard label="APPROVATE ANNO" value={approved} />
+        <StatCard label="TASSO APPROVAZIONE" value={`${approvalRate}%`} tone="coral" />
+      </section>
+
+      {/* Pending queue */}
+      <section className="h-card" style={{ padding: 0 }}>
+        <div style={{ padding: '18px 22px', borderBottom: 'var(--h-bw) solid var(--h-line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h3 className="h-heading" style={{ fontSize: 20 }}>Coda approvazioni</h3>
+            <div style={{ fontSize: 13, color: 'var(--h-muted)' }}>
+              {pendingRequests.length} richieste in attesa
+            </div>
+          </div>
+        </div>
+        {pendingRequests.length === 0 ? (
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--h-muted)' }}>
+            Nessuna richiesta in attesa. ✓
+          </div>
+        ) : (
+          <div style={{ display: 'grid' }}>
+            {pendingRequests.map((r) => (
+              <div
+                key={r.id}
+                onClick={() => setDetail(r)}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'auto 1fr auto auto',
+                  gap: 14, padding: '14px 22px',
+                  borderBottom: '2px solid var(--h-ink)',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <span className="h-avatar">{initialsOf(r.userFullName)}</span>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <strong>{r.userFullName}</strong>
+                    {r.jobRole && <span className="h-chip">{r.jobRole}</span>}
+                    <LeaveTypeTag code={r.leaveType} />
+                    {r.roleConflictWarning && (
+                      <span className="h-chip" style={{ background: 'var(--h-rose)', borderColor: 'var(--h-line)' }}>
+                        <Icon name="warning" size={12} /> Conflitto
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--h-muted)' }}>
+                    {r.startDate} → {r.endDate} · {r.duration || `${r.days || '?'}g`}
+                  </div>
+                  {r.noteUser && (
+                    <div style={{ fontSize: 13, fontStyle: 'italic', marginTop: 4 }}>"{r.noteUser}"</div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm(`Rifiutare la richiesta di ${r.userFullName}?`)) {
+                      router.patch(route('admin.requests.reject', r.id), { note_admin: '' }, { preserveScroll: true });
+                    }
+                  }}
+                  className="h-btn h-btn-sm"
+                  style={{ background: 'var(--h-rose)' }}
+                >
+                  Rifiuta
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.patch(route('admin.requests.approve', r.id), {}, { preserveScroll: true });
+                  }}
+                  className="h-btn h-btn-sm h-btn-primary"
+                >
+                  Approva
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Recent history */}
+      <section className="h-card" style={{ padding: 0 }}>
+        <div style={{ padding: '18px 22px', borderBottom: 'var(--h-bw) solid var(--h-line)' }}>
+          <h3 className="h-heading" style={{ fontSize: 20 }}>Decisioni recenti</h3>
+        </div>
+        {[...approvedRequests, ...rejectedRequests].length === 0 ? (
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--h-muted)' }}>Nessuna decisione recente</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="h-table">
+              <thead>
+                <tr>
+                  <th>Dipendente</th>
+                  <th>Tipo</th>
+                  <th>Periodo</th>
+                  <th>Stato</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...approvedRequests, ...rejectedRequests]
+                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                  .slice(0, 8)
+                  .map((r) => (
+                    <tr key={r.id} onClick={() => setDetail(r)} style={{ cursor: 'pointer' }}>
+                      <td>{r.userFullName}</td>
+                      <td><LeaveTypeTag code={r.leaveType} /></td>
+                      <td>{r.startDate} → {r.endDate}</td>
+                      <td><StatusBadge status={r.status} /></td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <RequestDetailSlideover
+        request={detail}
+        show={detail !== null}
+        onClose={() => setDetail(null)}
+      />
+    </div>
+  );
+}
+
+function initialsOf(fullName) {
+  if (!fullName) return '—';
+  const parts = fullName.trim().split(/\s+/);
+  return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase();
 }

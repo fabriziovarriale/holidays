@@ -1,6 +1,6 @@
-# Ferie
+# Holidays — gestionale ferie bitboss
 
-App per la gestione delle ferie (Laravel + Inertia.js + React).
+Successore di `ferie` — stesso stack (Laravel + Inertia.js + React), redesign V1 Pragmatica.
 
 ## Avvio con hot reload (modifiche live)
 

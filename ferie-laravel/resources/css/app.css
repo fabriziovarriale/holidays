@@ -1,172 +1,70 @@
+@import './holidays-theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: oklch(0.9818 0.0054 95.0986);
-    --foreground: oklch(0.3438 0.0269 95.7226);
-    --card: oklch(0.9818 0.0054 95.0986);
-    --card-foreground: oklch(0.1908 0.0020 106.5859);
-    --popover: oklch(1.0000 0 0);
-    --popover-foreground: oklch(0.2671 0.0196 98.9390);
-    --primary: oklch(0.6171 0.1375 39.0427);
-    --primary-foreground: oklch(1.0000 0 0);
-    --secondary: oklch(0.9245 0.0138 92.9892);
-    --secondary-foreground: oklch(0.4334 0.0177 98.6048);
-    --muted: oklch(0.9341 0.0153 90.2390);
-    --muted-foreground: oklch(0.6059 0.0075 97.4233);
-    --accent: oklch(0.9245 0.0138 92.9892);
-    --accent-foreground: oklch(0.2671 0.0196 98.9390);
-    --destructive: oklch(0.1908 0.0020 106.5859);
-    --destructive-foreground: oklch(1.0000 0 0);
-    --border: oklch(0.8847 0.0069 97.3627);
-    --input: oklch(0.7621 0.0156 98.3528);
-    --ring: oklch(0.6171 0.1375 39.0427);
-    --radius: 0.5rem;
+    /* Shadcn-compat bridge — legacy components still use these tokens.
+       Valori mappati sul nuovo tema Holidays. */
+    --background: #FFF8F0;
+    --foreground: #0A0A0A;
+    --card: #FFFFFF;
+    --card-foreground: #0A0A0A;
+    --popover: #FFFFFF;
+    --popover-foreground: #0A0A0A;
+    --primary: #FF6B35;
+    --primary-foreground: #0A0A0A;
+    --secondary: #F5ECDC;
+    --secondary-foreground: #0A0A0A;
+    --muted: #F5ECDC;
+    --muted-foreground: #706B63;
+    --accent: #F5ECDC;
+    --accent-foreground: #0A0A0A;
+    --destructive: #E5484D;
+    --destructive-foreground: #FFFFFF;
+    --border: #0A0A0A;
+    --input: #0A0A0A;
+    --ring: #FF6B35;
+    --radius: 0.375rem;
   }
 
   .dark {
-    --background: oklch(0.2679 0.0036 106.6427);
-    --foreground: oklch(0.8074 0.0142 93.0137);
-    --card: oklch(0.2679 0.0036 106.6427);
-    --card-foreground: oklch(0.9818 0.0054 95.0986);
-    --popover: oklch(0.3085 0.0035 106.6039);
-    --popover-foreground: oklch(0.9211 0.0040 106.4781);
-    --primary: oklch(0.6724 0.1308 38.7559);
-    --primary-foreground: oklch(1.0000 0 0);
-    --secondary: oklch(0.9818 0.0054 95.0986);
-    --secondary-foreground: oklch(0.3085 0.0035 106.6039);
-    --muted: oklch(0.2213 0.0038 106.7070);
-    --muted-foreground: oklch(0.7713 0.0169 99.0657);
-    --accent: oklch(0.2130 0.0078 95.4245);
-    --accent-foreground: oklch(0.9663 0.0080 98.8792);
-    --destructive: oklch(0.6368 0.2078 25.3313);
-    --destructive-foreground: oklch(1.0000 0 0);
-    --border: oklch(0.3618 0.0101 106.8928);
-    --input: oklch(0.4336 0.0113 100.2195);
-    --ring: oklch(0.6724 0.1308 38.7559);
+    --background: #141311;
+    --foreground: #FFF8F0;
+    --card: #1F1E1B;
+    --card-foreground: #FFF8F0;
+    --popover: #1F1E1B;
+    --popover-foreground: #FFF8F0;
+    --primary: #FF6B35;
+    --primary-foreground: #0A0A0A;
+    --secondary: #1C1B18;
+    --secondary-foreground: #FFF8F0;
+    --muted: #1C1B18;
+    --muted-foreground: #9C9689;
+    --accent: #1C1B18;
+    --accent-foreground: #FFF8F0;
+    --destructive: #E5484D;
+    --destructive-foreground: #FFFFFF;
+    --border: #FFF8F0;
+    --input: #FFF8F0;
+    --ring: #FF6B35;
   }
 
-  * {
-    border-color: var(--border);
-  }
+  * { border-color: var(--border); }
 
-  body {
+  html, body {
     background-color: var(--background);
     color: var(--foreground);
+    font-family: 'DM Sans', 'Archivo', system-ui, sans-serif;
   }
 
-  /* Icona calendario ottimizzata per dark mode */
-  .dark input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.8;
-    cursor: pointer;
-  }
-
-  .dark input[type="date"]::-webkit-date-and-time-value {
-    color: var(--foreground);
-  }
-
-  /* React Day Picker - tema dark, contrasto migliorato */
-  .dark .rdp-root {
-    --rdp-accent-color: oklch(0.55 0.15 38);
-    --rdp-accent-background-color: oklch(0.55 0.15 38 / 0.4);
-    --rdp-range_middle-background-color: oklch(0.55 0.15 38 / 0.25);
-    --rdp-range_middle-color: oklch(0.98 0 0);
-    --rdp-range_start-color: oklch(1 0 0);
-    --rdp-range_end-color: oklch(1 0 0);
-    --rdp-range_start-date-background-color: oklch(0.55 0.15 38);
-    --rdp-range_end-date-background-color: oklch(0.55 0.15 38);
-    --rdp-today-color: oklch(0.75 0.15 38);
-    --rdp-selected-border: 2px solid oklch(0.98 0 0);
-    --rdp-day_button-border: 1px solid var(--border);
-    --rdp-outside-opacity: 0.4;
-    --rdp-weekday-opacity: 0.9;
-  }
-
-  .dark .rdp-root .rdp-button_previous,
-  .dark .rdp-root .rdp-button_next {
-    color: var(--foreground);
-    background-color: var(--accent);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-  }
-
-  .dark .rdp-root .rdp-button_previous:hover:not(:disabled),
-  .dark .rdp-root .rdp-button_next:hover:not(:disabled) {
-    background-color: var(--muted);
-    color: var(--foreground);
-  }
-
-  .dark .rdp-root .rdp-caption_label {
-    color: var(--foreground);
-    font-weight: 600;
-  }
-
-  .dark .rdp-root .rdp-weekday {
-    color: var(--muted-foreground);
-  }
-
-  .dark .rdp-root .rdp-day_button {
-    color: var(--foreground);
-  }
-
-  .dark .rdp-root .rdp-day_button:hover:not(:disabled):not(.rdp-selected) {
-    background-color: var(--accent);
-  }
-
-  .dark .rdp-root .rdp-months {
-    gap: 2.5rem;
-  }
-
-  .dark .rdp-root .rdp-chevron {
-    fill: var(--foreground);
-  }
-
-  .dark .rdp-root .rdp-day_button {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-  }
-
-  .dark .rdp-root .rdp-month_grid {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-  }
-
-  .dark .rdp-root .rdp-weekday {
-    color: var(--muted-foreground);
-    font-weight: 500;
-  }
-
-  /* Calendario impatto assenze (dashboard): celle più grandi */
-  .dark .rdp-impact-calendar.rdp-root {
-    --rdp-cell-size: clamp(4.5rem, 12vw, 7.5rem);
-  }
-
-  @media (min-width: 1024px) {
-    .dark .rdp-impact-calendar.rdp-root {
-      --rdp-cell-size: 7.75rem;
-    }
-  }
-
-  .dark .rdp-impact-calendar .rdp-weekday {
-    font-size: 0.8rem;
-    padding-bottom: 0.35rem;
-  }
-
-  .dark .rdp-impact-calendar .rdp-caption_label {
-    font-size: 1.05rem;
-  }
+  /* The whole app mounts inside a .h-root wrapper for scoped neo-brutalist
+     typography; this keeps legacy Auth pages using their original look. */
 }
 
 @layer utilities {
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
 }

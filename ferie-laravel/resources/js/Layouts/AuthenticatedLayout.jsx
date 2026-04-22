@@ -1,168 +1,158 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
+import Icon from '@/Components/h/Icon';
 
-function formatUserRole(user) {
-    if (!user) return '';
-    const appRole = user.role === 'admin' ? 'Amministratore' : 'Dipendente';
-    return user.job_role ? `${appRole} · ${user.job_role}` : appRole;
+const NAV_USER = [
+  { key: 'dashboard',         label: 'Dashboard', icon: 'home', routeName: 'dashboard' },
+  { key: 'profile.edit',      label: 'Profilo',   icon: 'user', routeName: 'profile.edit' },
+];
+
+const NAV_ADMIN = [
+  { key: 'dashboard',           label: 'Dashboard', icon: 'home',   routeName: 'dashboard' },
+  { key: 'admin.users.index',   label: 'Utenti',    icon: 'users',  routeName: 'admin.users.index' },
+  { key: 'profile.edit',        label: 'Profilo',   icon: 'user',   routeName: 'profile.edit' },
+];
+
+function formatRole(user) {
+  if (!user) return '';
+  const base = user.role === 'admin' ? 'Amministratore' : 'Dipendente';
+  return user.job_role ? `${base} · ${user.job_role}` : base;
 }
 
 export default function AuthenticatedLayout({ header, children }) {
-    const { auth, impersonation } = usePage().props;
-    const user = auth.user;
-    const roleLine = formatUserRole(user);
+  const { auth, impersonation } = usePage().props;
+  const user = auth?.user;
+  const nav = user?.role === 'admin' ? NAV_ADMIN : NAV_USER;
 
-    return (
-        <div className="min-h-screen bg-background">
-            {/* Top navbar */}
-            <nav className="border-b border-border bg-card">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 items-center justify-between">
-                        {/* Left: logo + desktop links */}
-                        <div className="flex items-center gap-3">
-                            {/* Logo */}
-                            <Link href="/" className="flex shrink-0 items-center">
-                                <ApplicationLogo className="block h-9 w-auto fill-current text-foreground" />
-                            </Link>
+  const activeKey = (() => {
+    try {
+      return nav.find((n) => route().current(n.routeName))?.key;
+    } catch {
+      return null;
+    }
+  })();
 
-                            {/* Desktop nav links */}
-                            <div className="hidden space-x-8 lg:ms-6 lg:flex">
-                                <NavLink href={route('dashboard')} active={route().current('dashboard')}>
-                                    Dashboard
-                                </NavLink>
-                                {user?.role === 'admin' && (
-                                    <>
-                                        <NavLink href={route('admin.users.index')} active={route().current('admin.users.index')}>
-                                            Utenti
-                                        </NavLink>
-                                    </>
-                                )}
-                            </div>
-                        </div>
+  const initials = user
+    ? `${(user.first_name?.[0] || user.name?.[0] || '')}${(user.last_name?.[0] || user.name?.split(' ')?.[1]?.[0] || '')}`.toUpperCase()
+    : '—';
 
-                        {/* Right: quick actions (mobile) + user dropdown (desktop) */}
-                        <div className="lg:hidden">
-                            <Dropdown>
-                                <Dropdown.Trigger>
-                                    <button
-                                        type="button"
-                                        className="inline-flex max-w-[min(14rem,calc(100vw-9rem))] items-center gap-2 rounded-md py-1.5 pe-1 ps-1 text-muted-foreground transition hover:bg-accent hover:text-foreground"
-                                        aria-label="Menu utente"
-                                    >
-                                        <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 19.25a7.5 7.5 0 0115 0" />
-                                        </svg>
-                                        <span className="min-w-0 truncate text-start text-sm leading-tight text-foreground">
-                                            <span className="font-medium">{user?.name}</span>
-                                            {roleLine ? (
-                                                <>
-                                                    <span className="text-muted-foreground"> · </span>
-                                                    <span className="text-muted-foreground">{roleLine}</span>
-                                                </>
-                                            ) : null}
-                                        </span>
-                                    </button>
-                                </Dropdown.Trigger>
-                                <Dropdown.Content width="48">
-                                    {impersonation?.active && (
-                                        <Dropdown.Link href={route('impersonation.stop')} method="post" as="button">
-                                            Torna admin
-                                        </Dropdown.Link>
-                                    )}
-                                    <Dropdown.Link href={route('profile.edit')}>Profilo</Dropdown.Link>
-                                    <Dropdown.Link href={route('logout')} method="post" as="button">
-                                        Esci
-                                    </Dropdown.Link>
-                                </Dropdown.Content>
-                            </Dropdown>
-                        </div>
+  return (
+    <div className="h-root" style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: '240px 1fr' }}>
+      {/* SIDEBAR */}
+      <aside
+        style={{
+          borderRight: 'var(--h-bw) solid var(--h-line)',
+          background: 'var(--h-surface)',
+          padding: '22px 16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+          position: 'sticky',
+          top: 0,
+          height: '100vh',
+        }}
+      >
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 8,
+            background: 'var(--h-coral)',
+            border: 'var(--h-bw) solid var(--h-line)',
+            display: 'grid', placeItems: 'center',
+            fontFamily: 'var(--h-display)', fontSize: 22, color: 'var(--h-ink)',
+          }}>U</div>
+          <div>
+            <div className="h-display" style={{ fontSize: 18, lineHeight: 1 }}>Holidays</div>
+            <div className="h-mono" style={{ fontSize: 10, color: 'var(--h-muted)', letterSpacing: '0.1em' }}>BITBOSS</div>
+          </div>
+        </Link>
 
-                        <div className="hidden lg:flex lg:items-center">
-                            <Dropdown>
-                                <Dropdown.Trigger>
-                                    <span className="inline-flex rounded-md">
-                                        <button
-                                            type="button"
-                                            className="inline-flex max-w-xs items-center gap-2 rounded-md border border-transparent bg-card px-3 py-2 text-sm font-medium leading-4 text-muted-foreground transition hover:text-foreground focus:outline-none sm:max-w-md"
-                                        >
-                                            <span className="min-w-0 truncate text-start text-foreground">
-                                                <span className="font-medium">{user?.name}</span>
-                                                {roleLine ? (
-                                                    <>
-                                                        <span className="text-muted-foreground"> · </span>
-                                                        <span className="text-muted-foreground">{roleLine}</span>
-                                                    </>
-                                                ) : null}
-                                            </span>
-                                            <svg className="h-4 w-4 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                                            </svg>
-                                        </button>
-                                    </span>
-                                </Dropdown.Trigger>
-                                <Dropdown.Content width="48">
-                                    {impersonation?.active && (
-                                        <Dropdown.Link href={route('impersonation.stop')} method="post" as="button">
-                                            Torna admin
-                                        </Dropdown.Link>
-                                    )}
-                                    <Dropdown.Link href={route('profile.edit')}>Profilo</Dropdown.Link>
-                                    <Dropdown.Link href={route('logout')} method="post" as="button">
-                                        Esci
-                                    </Dropdown.Link>
-                                </Dropdown.Content>
-                            </Dropdown>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+          {nav.map((item) => {
+            const isActive = activeKey === item.key;
+            return (
+              <Link
+                key={item.key}
+                href={route(item.routeName)}
+                className="h-btn h-btn-sm"
+                style={{
+                  justifyContent: 'flex-start',
+                  background: isActive ? 'var(--h-ink)' : 'transparent',
+                  color: isActive ? 'var(--h-bg)' : 'var(--h-ink)',
+                  boxShadow: isActive ? 'var(--h-shadow-sm)' : 'none',
+                  border: isActive ? 'var(--h-bw) solid var(--h-line)' : '2px solid transparent',
+                  padding: '10px 12px',
+                  textDecoration: 'none',
+                }}
+              >
+                <Icon name={item.icon} size={16} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
-            {header && (
-                <header className="border-b border-border bg-card shadow">
-                    <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-                        {header}
-                    </div>
-                </header>
-            )}
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {impersonation?.active && (
+            <Link
+              href={route('impersonation.stop')}
+              method="post"
+              as="button"
+              className="h-btn h-btn-sm"
+              style={{ width: '100%', background: 'var(--h-yellow)' }}
+            >
+              Torna admin
+            </Link>
+          )}
 
-            <main className="pb-20 lg:pb-0">{children}</main>
+          <div
+            className="h-card-flat"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 12px',
+              border: '2px solid var(--h-line)',
+              borderRadius: 'var(--h-radius)',
+            }}
+          >
+            <span className="h-avatar" style={{ background: 'var(--h-mint)' }}>{initials}</span>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {user?.name}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--h-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {formatRole(user)}
+              </div>
+            </div>
+          </div>
 
-            {/* Mobile bottom navigation */}
-            <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur lg:hidden">
-                <div className="mx-auto flex h-16 max-w-7xl items-center justify-around px-4">
-                    <Link
-                        href={route('dashboard')}
-                        className={`flex min-w-20 flex-col items-center gap-1 rounded-md px-3 py-2 text-xs font-medium transition-colors ${
-                            route().current('dashboard')
-                                ? 'text-primary'
-                                : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                    >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 10.5L12 3l9 7.5M5.25 9.75V21h13.5V9.75" />
-                        </svg>
-                        <span>Dashboard</span>
-                    </Link>
-
-                    {user?.role === 'admin' && (
-                        <Link
-                            href={route('admin.users.index')}
-                            className={`flex min-w-20 flex-col items-center gap-1 rounded-md px-3 py-2 text-xs font-medium transition-colors ${
-                                route().current('admin.users.index')
-                                    ? 'text-primary'
-                                    : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                        >
-                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M17 20h5v-2a3 3 0 00-5.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20h10M12 11a4 4 0 100-8 4 4 0 000 8zm0 0a7 7 0 00-7 7v2h14v-2a7 7 0 00-7-7z" />
-                            </svg>
-                            <span>Utenti</span>
-                        </Link>
-                    )}
-                </div>
-            </nav>
+          <Link
+            href={route('logout')}
+            method="post"
+            as="button"
+            className="h-btn h-btn-sm h-btn-ghost"
+            style={{ width: '100%', justifyContent: 'flex-start' }}
+          >
+            <Icon name="logout" size={16} />
+            <span>Esci</span>
+          </Link>
         </div>
-    );
+      </aside>
+
+      {/* MAIN */}
+      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        {header && (
+          <header
+            style={{
+              borderBottom: 'var(--h-bw) solid var(--h-line)',
+              background: 'var(--h-bg)',
+              padding: '22px 28px',
+            }}
+          >
+            {header}
+          </header>
+        )}
+        <main style={{ padding: 28, background: 'var(--h-bg)', flex: 1 }}>
+          {children}
+        </main>
+      </div>
+    </div>
+  );
 }
