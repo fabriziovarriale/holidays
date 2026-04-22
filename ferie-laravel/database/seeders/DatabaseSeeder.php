@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
                 'first_name' => 'Admin',
                 'last_name'  => 'Bitboss',
                 'email'      => 'admin@ferie.it',
-                'password'   => Hash::make('Admin1234!'),
+                'password'   => Hash::make('Bitboss123!'),
                 'role'       => 'admin',
                 'job_role'   => 'Socio',
                 'active'     => true,
