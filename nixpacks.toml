@@ -22,7 +22,12 @@ nixPkgs = [
 
 [phases.install]
 cmds = [
-  "cd ferie-laravel && composer install --no-dev --optimize-autoloader --no-interaction",
+  # --no-scripts skips the post-autoload-dump hook that runs
+  # `php artisan package:discover`. That hook boots Laravel and parses
+  # APP_URL; if the env isn't fully set yet (first deploy), Laravel
+  # throws "Invalid URI: Host is malformed". Package discovery will run
+  # at startup instead, when the service env is complete.
+  "cd ferie-laravel && composer install --no-dev --optimize-autoloader --no-scripts --no-interaction",
   # --include=dev forces Vite / React / Tailwind (in devDependencies) to
   # install even when Railway injects NODE_ENV=production.
   "cd ferie-laravel && npm ci --include=dev",
@@ -31,10 +36,10 @@ cmds = [
 [phases.build]
 cmds = [
   "cd ferie-laravel && npm run build",
-  "cd ferie-laravel && php artisan config:cache",
-  "cd ferie-laravel && php artisan route:cache",
-  "cd ferie-laravel && php artisan view:cache",
 ]
 
+# Config/route/view caches moved to the start command — they also boot
+# Laravel and need a valid env. At start time the service env is fully
+# populated so they run safely.
 [start]
-cmd = "cd ferie-laravel && php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=$PORT"
+cmd = "cd ferie-laravel && php artisan package:discover --ansi && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=$PORT"
