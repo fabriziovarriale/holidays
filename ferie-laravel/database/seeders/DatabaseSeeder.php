@@ -24,5 +24,11 @@ class DatabaseSeeder extends Seeder
                 'active'     => true,
             ]);
         }
+
+        // Demo data (6 dipendenti + saldo 2026 + 16 richieste esempio).
+        // Attenzione: DevDataSeeder cancella e ricrea le richieste dei 6
+        // utenti seed (giulia@, marco@, sara@, luca@, chiara@, alessio@)
+        // a ogni esecuzione. I dati di altri utenti non vengono toccati.
+        $this->call(DevDataSeeder::class);
     }
 }
