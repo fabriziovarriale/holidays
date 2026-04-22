@@ -1,3 +1,5 @@
+import Button from '@/Components/h/Button';
+import Icon from '@/Components/h/Icon';
 import Slideover from '@/Components/Slideover';
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { format, parse } from 'date-fns';
@@ -5,17 +7,19 @@ import { it } from 'date-fns/locale';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { DayPicker } from 'react-day-picker';
 
-const LEAVE_TYPE_COLORS = {
-    Ferie: 'bg-emerald-500',
-    Malattia: 'bg-rose-500',
-    Permesso: 'bg-sky-500',
+const LEAVE_TYPE_TOKENS = {
+    Ferie: { bg: 'var(--h-coral)', label: 'Ferie' },
+    Malattia: { bg: 'var(--h-rose)', label: 'Malattia' },
+    Permesso: { bg: 'var(--h-sky)', label: 'Permesso' },
 };
 
-function leaveTypeColor(type) {
-    for (const [key, cls] of Object.entries(LEAVE_TYPE_COLORS)) {
-        if (type?.toLowerCase().includes(key.toLowerCase())) return cls;
-    }
-    return 'bg-primary';
+function leaveTypeToken(type) {
+    const key = Object.keys(LEAVE_TYPE_TOKENS).find((k) =>
+        type?.toLowerCase().includes(k.toLowerCase())
+    );
+    return key
+        ? LEAVE_TYPE_TOKENS[key]
+        : { bg: 'var(--h-yellow)', label: type || 'Altro' };
 }
 
 function parseYmd(ymd) {
@@ -176,123 +180,207 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
         const raw = byDateKeyRef.current[key] ?? [];
         const entries = groupEntriesByUser(raw);
         const has = entries.length > 0;
-        const tdClass = [className, '!align-top p-1'].filter(Boolean).join(' ');
 
         const dow = day.date.getDay();
         const isWeekend = dow === 0 || dow === 6;
         const isHoliday = holidaySetRef.current.has(key);
         const isNonWorking = isWeekend || isHoliday;
 
+        const cellBg = has && !isNonWorking
+            ? 'var(--h-mint)'
+            : isNonWorking
+                ? 'var(--h-bg-2)'
+                : 'var(--h-surface)';
+
         const hatchStyle = isNonWorking ? {
-            backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(128,128,128,0.12) 5px, rgba(128,128,128,0.12) 10px)',
+            backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(10,10,10,0.10) 5px, rgba(10,10,10,0.10) 10px)',
         } : {};
 
         return (
-            <td {...tdProps} className={tdClass}>
+            <td {...tdProps} className={[className, '!align-top'].filter(Boolean).join(' ')} style={{ padding: 3 }}>
                 <div
-                    className={[
-                        'flex h-[7.5rem] min-h-[7.5rem] cursor-pointer flex-col gap-1 overflow-hidden rounded-sm border sm:h-[8.5rem] sm:min-h-[8.5rem]',
-                        has && !isNonWorking ? 'border-emerald-500/40 bg-emerald-500/15' : '',
-                        has && isNonWorking ? 'border-amber-500/40' : '',
-                        !has ? 'border-transparent' : '',
-                    ].filter(Boolean).join(' ')}
-                    style={hatchStyle}
                     onClick={() => setDetailDay(day.date)}
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 4,
+                        minHeight: '7.5rem',
+                        height: '7.5rem',
+                        padding: 6,
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        border: '2px solid var(--h-line)',
+                        borderRadius: 'var(--h-radius)',
+                        background: cellBg,
+                        color: 'var(--h-ink)',
+                        ...hatchStyle,
+                    }}
                 >
-                    <div className="flex shrink-0 justify-start">{children}</div>
-                    {has ? (
-                        <div className="hide-scrollbar flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-0.5 pb-1">
-                            {entries.slice(0, MAX_NAMES_IN_CELL).map((e, i) => (
-                                <div
-                                    key={`${e.userFullName}-${i}`}
-                                    className="flex min-w-0 items-start gap-1 rounded-md border border-border/80 bg-card/95 px-1 py-0.5 shadow-sm"
-                                    title={`${e.userFullName} — ${e.leaveType}`}
-                                >
-                                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold leading-none text-white ${leaveTypeColor(e.primaryType)}`}>
-                                        {initials(e.userFullName)}
-                                    </span>
-                                    <span className="hidden min-w-0 flex-1 leading-tight sm:block">
-                                        <span className="block truncate text-[11px] font-semibold text-foreground">
-                                            {e.userFullName}
+                    <div style={{ display: 'flex', justifyContent: 'flex-start', flexShrink: 0 }}>{children}</div>
+                    {has && (
+                        <div
+                            className="hide-scrollbar"
+                            style={{
+                                flex: 1,
+                                minHeight: 0,
+                                overflowY: 'auto',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 4,
+                                paddingRight: 2,
+                            }}
+                        >
+                            {entries.slice(0, MAX_NAMES_IN_CELL).map((e, i) => {
+                                const token = leaveTypeToken(e.primaryType);
+                                return (
+                                    <div
+                                        key={`${e.userFullName}-${i}`}
+                                        title={`${e.userFullName} — ${e.leaveType}`}
+                                        style={{
+                                            display: 'flex',
+                                            minWidth: 0,
+                                            alignItems: 'center',
+                                            gap: 6,
+                                            padding: '2px 4px',
+                                            border: '2px solid var(--h-line)',
+                                            borderRadius: 4,
+                                            background: 'var(--h-surface)',
+                                        }}
+                                    >
+                                        <span
+                                            style={{
+                                                flexShrink: 0,
+                                                width: 18,
+                                                height: 18,
+                                                borderRadius: '50%',
+                                                background: token.bg,
+                                                border: '2px solid var(--h-line)',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: 9,
+                                                fontFamily: 'var(--h-display)',
+                                                color: 'var(--h-ink)',
+                                                lineHeight: 1,
+                                            }}
+                                        >
+                                            {initials(e.userFullName)}
                                         </span>
-                                        <span className="block truncate text-[10px] text-muted-foreground">
-                                            {e.leaveType}
+                                        <span style={{ minWidth: 0, flex: 1, lineHeight: 1.2 }}>
+                                            <span
+                                                style={{
+                                                    display: 'block',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                    fontSize: 11,
+                                                    fontWeight: 700,
+                                                    color: 'var(--h-ink)',
+                                                }}
+                                            >
+                                                {e.userFullName}
+                                            </span>
+                                            <span
+                                                className="h-muted"
+                                                style={{
+                                                    display: 'block',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                    fontSize: 10,
+                                                }}
+                                            >
+                                                {e.leaveType}
+                                            </span>
                                         </span>
-                                    </span>
-                                </div>
-                            ))}
-                            {entries.length > MAX_NAMES_IN_CELL ? (
-                                <span className="pl-0.5 text-[10px] font-medium text-muted-foreground">
+                                    </div>
+                                );
+                            })}
+                            {entries.length > MAX_NAMES_IN_CELL && (
+                                <span className="h-muted" style={{ fontSize: 10, fontWeight: 600, paddingLeft: 2 }}>
                                     +{entries.length - MAX_NAMES_IN_CELL} altri
                                 </span>
-                            ) : null}
+                            )}
                         </div>
-                    ) : null}
+                    )}
                 </div>
             </td>
         );
     }, []);
 
     return (
-        <section className="rounded-lg border border-border bg-card p-6 shadow">
-            <div className="mb-4">
-                <h3 className="text-lg font-medium text-foreground">Calendario assenze approvate</h3>
-                <p className="text-sm text-muted-foreground">
+        <section className="h-card" style={{ padding: 22 }}>
+            <div style={{ marginBottom: 14 }}>
+                <h3 className="h-heading" style={{ fontSize: 18 }}>Calendario assenze approvate</h3>
+                <p className="h-muted" style={{ fontSize: 13, marginTop: 4 }}>
                     Clic su un giorno per aprire il dettaglio nel pannello laterale.
                 </p>
             </div>
 
             {approvedEntries.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nessuna richiesta approvata da mostrare.</p>
+                <p className="h-muted" style={{ fontSize: 13 }}>Nessuna richiesta approvata da mostrare.</p>
             ) : (
                 <>
-                    {/* Filtri */}
-                    <div className="mb-4 flex flex-wrap gap-3">
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
                         <button
                             type="button"
                             onClick={() => setNameDialogOpen(true)}
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm text-foreground hover:bg-accent/50"
+                            className="h-btn h-btn-sm"
                         >
-                            <span className="text-muted-foreground">Dipendente:</span>
-                            <span className="font-medium">{nameFilter || 'Tutti'}</span>
+                            <span className="h-muted">Dipendente:</span>
+                            <span>{nameFilter || 'Tutti'}</span>
+                            <Icon name="chevDown" size={12} />
                         </button>
                         <button
                             type="button"
                             onClick={() => setTypeDialogOpen(true)}
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm text-foreground hover:bg-accent/50"
+                            className="h-btn h-btn-sm"
                         >
-                            <span className="text-muted-foreground">Tipo assenza:</span>
-                            <span className="font-medium">{typeFilter || 'Tutti'}</span>
+                            <span className="h-muted">Tipo assenza:</span>
+                            <span>{typeFilter || 'Tutti'}</span>
+                            <Icon name="chevDown" size={12} />
                         </button>
                         {(nameFilter || typeFilter) && (
                             <button
                                 type="button"
                                 onClick={() => { setNameFilter(''); setTypeFilter(''); }}
-                                className="text-sm text-muted-foreground hover:text-foreground underline"
+                                className="h-btn h-btn-sm h-btn-ghost"
+                                style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}
                             >
                                 Azzera filtri
                             </button>
                         )}
                     </div>
 
-                    {/* Legenda */}
-                    <div className="mb-4 flex flex-wrap gap-3">
-                        {Object.entries(LEAVE_TYPE_COLORS).map(([label, cls]) => (
-                            <span key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                <span className={`inline-block h-3 w-3 rounded-full ${cls}`} />
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 14 }}>
+                        {Object.entries(LEAVE_TYPE_TOKENS).map(([label, { bg }]) => (
+                            <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                                <span
+                                    style={{
+                                        width: 12,
+                                        height: 12,
+                                        borderRadius: '50%',
+                                        background: bg,
+                                        border: '2px solid var(--h-line)',
+                                    }}
+                                />
                                 {label}
                             </span>
                         ))}
-                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
                             <span
-                                className="inline-block h-3 w-3 rounded-sm border border-border"
-                                style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(128,128,128,0.3) 2px, rgba(128,128,128,0.3) 4px)' }}
+                                style={{
+                                    width: 14,
+                                    height: 14,
+                                    border: '2px solid var(--h-line)',
+                                    backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(10,10,10,0.3) 2px, rgba(10,10,10,0.3) 4px)',
+                                }}
                             />
                             Weekend / festività
                         </span>
                     </div>
 
-                    <div className="w-full min-w-0 overflow-x-auto">
+                    <div style={{ width: '100%', minWidth: 0, overflowX: 'auto', color: 'var(--h-ink)' }}>
                         <DayPicker
                             mode="single"
                             locale={it}
@@ -323,32 +411,55 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
                         onClose={closeDetail}
                         title={detailDay ? format(detailDay, 'd MMMM yyyy', { locale: it }) : ''}
                     >
-                        {detailDay && detailRows.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">
+                        {detailDay && detailRows.length === 0 && (
+                            <p className="h-muted" style={{ fontSize: 13 }}>
                                 Nessuna assenza approvata in questa data.
                             </p>
-                        ) : null}
-                        {detailDay && detailRows.length > 0 ? (
-                            <ul className="space-y-3 text-sm">
-                                {detailRows.map((row, idx) => (
-                                    <li
-                                        key={`${row.requestId}-${idx}`}
-                                        className="flex gap-2 border-b border-border/60 pb-3 last:border-0 last:pb-0"
-                                    >
-                                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${leaveTypeColor(row.primaryType)}`}>
-                                            {initials(row.userFullName)}
-                                        </span>
-                                        <div className="min-w-0">
-                                            <p className="font-medium text-foreground">{row.userFullName}</p>
-                                            <p className="text-muted-foreground">{row.leaveType}</p>
-                                            <p className="text-muted-foreground">Giorni richiesti: {row.requestedUnits}</p>
-                                            <p className="text-muted-foreground">Richiesto il {formatDateTime(row.createdAt)}</p>
-                                            <p className="text-muted-foreground">Approvato il {formatDateTime(row.approvedAt)}</p>
-                                        </div>
-                                    </li>
-                                ))}
+                        )}
+                        {detailDay && detailRows.length > 0 && (
+                            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 12 }}>
+                                {detailRows.map((row, idx) => {
+                                    const token = leaveTypeToken(row.primaryType);
+                                    return (
+                                        <li
+                                            key={`${row.requestId}-${idx}`}
+                                            style={{
+                                                display: 'flex',
+                                                gap: 12,
+                                                paddingBottom: 12,
+                                                borderBottom: idx < detailRows.length - 1 ? '2px dashed var(--h-line)' : 'none',
+                                            }}
+                                        >
+                                            <span
+                                                style={{
+                                                    flexShrink: 0,
+                                                    width: 36,
+                                                    height: 36,
+                                                    borderRadius: '50%',
+                                                    background: token.bg,
+                                                    border: '2px solid var(--h-line)',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    fontFamily: 'var(--h-display)',
+                                                    fontSize: 13,
+                                                    color: 'var(--h-ink)',
+                                                }}
+                                            >
+                                                {initials(row.userFullName)}
+                                            </span>
+                                            <div style={{ minWidth: 0, fontSize: 13 }}>
+                                                <div style={{ fontWeight: 700 }}>{row.userFullName}</div>
+                                                <div className="h-muted">{row.leaveType}</div>
+                                                <div className="h-muted">Giorni richiesti: <b className="h-mono" style={{ color: 'var(--h-ink)' }}>{row.requestedUnits}</b></div>
+                                                <div className="h-muted">Richiesto il {formatDateTime(row.createdAt)}</div>
+                                                <div className="h-muted">Approvato il {formatDateTime(row.approvedAt)}</div>
+                                            </div>
+                                        </li>
+                                    );
+                                })}
                             </ul>
-                        ) : null}
+                        )}
                     </Slideover>
 
                     <RadioFilterDialog
@@ -388,7 +499,10 @@ function RadioFilterDialog({ show, title, allLabel, options, value, onChange, on
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="absolute inset-0 bg-black/50" />
+                    <div
+                        className="absolute inset-0"
+                        style={{ background: 'rgba(10,10,10,0.45)' }}
+                    />
                 </TransitionChild>
 
                 <TransitionChild
@@ -399,40 +513,69 @@ function RadioFilterDialog({ show, title, allLabel, options, value, onChange, on
                     leaveFrom="opacity-100 scale-100"
                     leaveTo="opacity-0 scale-95"
                 >
-                    <DialogPanel className="relative w-full max-w-md rounded-lg border border-border bg-card p-5 shadow-xl">
-                        <h3 className="mb-4 text-base font-semibold text-foreground">{title}</h3>
-                        <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
-                            <label className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-accent/50">
+                    <DialogPanel
+                        className="h-card h-root"
+                        style={{
+                            position: 'relative',
+                            width: '100%',
+                            maxWidth: 440,
+                            padding: 22,
+                            background: 'var(--h-surface)',
+                            color: 'var(--h-ink)',
+                        }}
+                    >
+                        <h3 className="h-heading" style={{ fontSize: 18, marginBottom: 14 }}>{title}</h3>
+                        <div style={{ maxHeight: '18rem', overflowY: 'auto', display: 'grid', gap: 4, paddingRight: 4 }}>
+                            <label
+                                style={{
+                                    display: 'flex',
+                                    cursor: 'pointer',
+                                    alignItems: 'center',
+                                    gap: 10,
+                                    padding: '8px 10px',
+                                    border: '2px solid transparent',
+                                    borderRadius: 'var(--h-radius)',
+                                    background: value === '' ? 'var(--h-bg-2)' : 'transparent',
+                                }}
+                            >
                                 <input
                                     type="radio"
                                     name={title}
                                     checked={value === ''}
                                     onChange={() => onChange('')}
-                                    className="h-4 w-4 border-border bg-card text-primary focus:ring-primary"
+                                    style={{ accentColor: 'var(--h-coral)', width: 16, height: 16 }}
                                 />
-                                <span className="text-sm text-foreground">{allLabel}</span>
+                                <span style={{ fontSize: 13, fontWeight: 600 }}>{allLabel}</span>
                             </label>
                             {options.map((option) => (
-                                <label key={option} className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-accent/50">
+                                <label
+                                    key={option}
+                                    style={{
+                                        display: 'flex',
+                                        cursor: 'pointer',
+                                        alignItems: 'center',
+                                        gap: 10,
+                                        padding: '8px 10px',
+                                        border: '2px solid transparent',
+                                        borderRadius: 'var(--h-radius)',
+                                        background: value === option ? 'var(--h-bg-2)' : 'transparent',
+                                    }}
+                                >
                                     <input
                                         type="radio"
                                         name={title}
                                         checked={value === option}
                                         onChange={() => onChange(option)}
-                                        className="h-4 w-4 border-border bg-card text-primary focus:ring-primary"
+                                        style={{ accentColor: 'var(--h-coral)', width: 16, height: 16 }}
                                     />
-                                    <span className="text-sm text-foreground">{option}</span>
+                                    <span style={{ fontSize: 13 }}>{option}</span>
                                 </label>
                             ))}
                         </div>
-                        <div className="mt-5 flex justify-end">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-                            >
+                        <div style={{ marginTop: 18, display: 'flex', justifyContent: 'flex-end' }}>
+                            <Button variant="primary" onClick={onClose}>
                                 Chiudi
-                            </button>
+                            </Button>
                         </div>
                     </DialogPanel>
                 </TransitionChild>

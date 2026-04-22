@@ -232,6 +232,57 @@
 .h-avatar.xs { width: 24px; height: 24px; font-size: 10px; }
 .h-avatar.lg { width: 56px; height: 56px; font-size: 18px; }
 
+/* React-day-picker — tema V1 */
+.rdp-root,
+.rdp-impact-calendar {
+  --rdp-accent-color: var(--h-coral);
+  --rdp-accent-background-color: var(--h-coral);
+  --rdp-background-color: var(--h-surface);
+  --rdp-today-color: var(--h-coral);
+  --rdp-range_middle-background-color: var(--h-yellow);
+  color: var(--h-ink);
+}
+.rdp-impact-calendar .rdp-caption_label,
+.rdp-impact-calendar .rdp-month_caption {
+  color: var(--h-ink);
+  font-family: var(--h-sans);
+  font-weight: 800;
+  font-size: 14px;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+.rdp-impact-calendar .rdp-weekday {
+  color: var(--h-muted);
+  font-family: var(--h-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 6px 4px;
+}
+.rdp-impact-calendar .rdp-button_previous,
+.rdp-impact-calendar .rdp-button_next {
+  color: var(--h-ink);
+  border: 2px solid var(--h-line);
+  border-radius: var(--h-radius);
+  background: var(--h-surface);
+}
+.rdp-impact-calendar .rdp-button_previous:hover,
+.rdp-impact-calendar .rdp-button_next:hover {
+  background: var(--h-bg-2);
+}
+.rdp-impact-calendar .rdp-nav {
+  gap: 6px;
+}
+.rdp-impact-calendar .rdp-day_button {
+  color: var(--h-ink);
+  font-family: var(--h-mono);
+  font-weight: 700;
+}
+.rdp-impact-calendar .rdp-outside .rdp-day_button {
+  color: var(--h-muted);
+  opacity: 0.6;
+}
+
 /* Marquee scroller decoration */
 .h-marquee {
   display: flex; gap: 32px;
