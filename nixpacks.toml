@@ -42,4 +42,17 @@ cmds = [
 # Laravel and need a valid env. At start time the service env is fully
 # populated so they run safely.
 [start]
-cmd = "cd ferie-laravel && php artisan package:discover --ansi && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=$PORT"
+# If APP_URL isn't a valid http(s) URL (e.g. left empty or pasted with a
+# placeholder like "https://<...>") unset it so Laravel falls back to
+# http://localhost during Request::create() inside artisan bootstrap.
+cmd = """
+cd ferie-laravel && \
+if ! [[ "$APP_URL" =~ ^https?://[A-Za-z0-9.-]+(:[0-9]+)?(/.*)?$ ]]; then unset APP_URL; fi && \
+php artisan package:discover --ansi && \
+php artisan config:cache && \
+php artisan route:cache && \
+php artisan view:cache && \
+php artisan migrate --force && \
+php artisan db:seed --force && \
+php artisan serve --host=0.0.0.0 --port=$PORT
+"""
