@@ -23,7 +23,6 @@ Route::get('/dashboard', DashboardController::class)
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/requests', [RequestsController::class, 'index'])->name('requests.index');
-    Route::get('/team', [TeamController::class, 'index'])->name('team.index');
 
     Route::get('/dashboard/request', fn () => redirect()->route('dashboard'))
         ->name('leave-request.create');
@@ -33,6 +32,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('leave-request.cancel');
     Route::get('/dashboard/request/{leaveRequest}/attachment', [LeaveRequestAttachmentController::class, 'download'])
         ->name('leave-request.attachment');
+});
+
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/team', [TeamController::class, 'index'])->name('team.index');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {

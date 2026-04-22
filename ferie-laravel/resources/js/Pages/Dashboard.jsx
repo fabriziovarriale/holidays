@@ -48,7 +48,9 @@ export default function Dashboard({
               {new Date().toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
             </div>
             <h1 className="h-display" style={{ fontSize: 44, marginTop: 4 }}>
-              Ciao, {pageUser?.name?.split(' ')?.[0] || 'team'}.
+              Ciao, {isAdmin
+                ? 'team'
+                : (pageUser?.first_name || pageUser?.name?.split(' ')?.[0] || 'dipendente')}.
             </h1>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
@@ -140,17 +142,19 @@ function EmployeeView({ balance, requests, holidays }) {
   return (
     <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1.2fr 1fr' }}>
       {/* Balance card */}
-      <section className="h-card" style={{ padding: 22, background: 'var(--h-ink)', color: 'var(--h-bg)' }}>
-        <div className="h-label" style={{ opacity: 0.7 }}>SALDO FERIE {new Date().getFullYear()}</div>
+      <section className="h-card" style={{ padding: 22 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <div className="h-label">SALDO FERIE {new Date().getFullYear()}</div>
+          <div className="h-mono h-muted" style={{ fontSize: 11 }}>
+            maturati <b style={{ color: 'var(--h-ink)' }}>{total}</b>g
+          </div>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 22, marginTop: 14 }}>
           <BalanceRing total={total} used={used} pending={pendingCnt} remaining={remaining} />
           <div style={{ display: 'grid', gap: 10, flex: 1 }}>
-            <LegendRow dot="var(--h-coral)" label="Usati"    value={used} />
+            <LegendRow dot="var(--h-coral)"  label="Usati"     value={used} />
             <LegendRow dot="var(--h-yellow)" label="In attesa" value={pendingCnt} />
-            <LegendRow dot="var(--h-mint)"  label="Residui"  value={remaining} />
-            <div style={{ borderTop: '2px solid var(--h-bg)', paddingTop: 8, fontSize: 12, opacity: 0.8 }}>
-              Totale maturato: <strong>{total}</strong> giorni
-            </div>
+            <LegendRow dot="var(--h-mint)"   label="Residui"   value={remaining} strong />
           </div>
         </div>
       </section>
@@ -277,12 +281,35 @@ function EmployeeView({ balance, requests, holidays }) {
   );
 }
 
-function LegendRow({ dot, label, value }) {
+function LegendRow({ dot, label, value, strong = false }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <span style={{ width: 10, height: 10, borderRadius: 2, background: dot }} />
-      <span style={{ flex: 1, fontSize: 13 }}>{label}</span>
-      <strong className="h-mono" style={{ fontSize: 15 }}>{value}</strong>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        paddingBottom: 6,
+        borderBottom: '2px dashed var(--h-line)',
+      }}
+    >
+      <span
+        style={{
+          width: 12,
+          height: 12,
+          background: dot,
+          border: '2px solid var(--h-line)',
+        }}
+      />
+      <span style={{ flex: 1, fontSize: 13, fontWeight: strong ? 700 : 500 }}>{label}</span>
+      <strong
+        className="h-mono"
+        style={{
+          fontSize: strong ? 20 : 16,
+          color: strong ? 'var(--h-coral)' : 'var(--h-ink)',
+        }}
+      >
+        {value}
+      </strong>
     </div>
   );
 }

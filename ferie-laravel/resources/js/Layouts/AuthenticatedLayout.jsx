@@ -4,7 +4,6 @@ import Icon from '@/Components/h/Icon';
 const NAV_USER = [
   { key: 'dashboard',      label: 'Dashboard',  icon: 'home', routeName: 'dashboard' },
   { key: 'requests.index', label: 'Richieste',  icon: 'doc',  routeName: 'requests.index' },
-  { key: 'team.index',     label: 'Team',       icon: 'team', routeName: 'team.index' },
   { key: 'profile.edit',   label: 'Profilo',    icon: 'user', routeName: 'profile.edit' },
 ];
 
