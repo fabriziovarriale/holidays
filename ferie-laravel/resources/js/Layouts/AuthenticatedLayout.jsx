@@ -2,14 +2,19 @@ import { Link, usePage, router } from '@inertiajs/react';
 import Icon from '@/Components/h/Icon';
 
 const NAV_USER = [
-  { key: 'dashboard',         label: 'Dashboard', icon: 'home', routeName: 'dashboard' },
-  { key: 'profile.edit',      label: 'Profilo',   icon: 'user', routeName: 'profile.edit' },
+  { key: 'dashboard',      label: 'Dashboard',  icon: 'home', routeName: 'dashboard' },
+  { key: 'requests.index', label: 'Richieste',  icon: 'doc',  routeName: 'requests.index' },
+  { key: 'team.index',     label: 'Team',       icon: 'team', routeName: 'team.index' },
+  { key: 'profile.edit',   label: 'Profilo',    icon: 'user', routeName: 'profile.edit' },
 ];
 
 const NAV_ADMIN = [
-  { key: 'dashboard',           label: 'Dashboard', icon: 'home',   routeName: 'dashboard' },
-  { key: 'admin.users.index',   label: 'Utenti',    icon: 'users',  routeName: 'admin.users.index' },
-  { key: 'profile.edit',        label: 'Profilo',   icon: 'user',   routeName: 'profile.edit' },
+  { key: 'dashboard',           label: 'Dashboard',  icon: 'home',   routeName: 'dashboard' },
+  { key: 'requests.index',      label: 'Richieste',  icon: 'doc',    routeName: 'requests.index' },
+  { key: 'team.index',          label: 'Team',       icon: 'team',   routeName: 'team.index' },
+  { key: 'admin.users.index',   label: 'Utenti',     icon: 'users',  routeName: 'admin.users.index' },
+  { key: 'admin.reports.index', label: 'Report',     icon: 'report', routeName: 'admin.reports.index' },
+  { key: 'profile.edit',        label: 'Profilo',    icon: 'user',   routeName: 'profile.edit' },
 ];
 
 function formatRole(user) {

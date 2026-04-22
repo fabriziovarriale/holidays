@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\ReportsPageController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeaveRequestAttachmentController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RequestsController;
+use App\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +22,9 @@ Route::get('/dashboard', DashboardController::class)
     ->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/requests', [RequestsController::class, 'index'])->name('requests.index');
+    Route::get('/team', [TeamController::class, 'index'])->name('team.index');
+
     Route::get('/dashboard/request', fn () => redirect()->route('dashboard'))
         ->name('leave-request.create');
     Route::post('/dashboard/request', [LeaveRequestController::class, 'store'])
@@ -34,6 +40,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/users', [UsersController::class, 'store'])->name('users.store');
     Route::patch('/users/{user}/balance', [UsersController::class, 'updateBalance'])->name('users.balance');
     Route::delete('/users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
+    Route::get('/reports', [ReportsPageController::class, 'index'])->name('reports.index');
     Route::get('/reports/export-leaves', [App\Http\Controllers\Admin\ReportController::class, 'exportLeaves'])->name('reports.export-leaves');
     Route::patch('/requests/{leaveRequest}/approve', [App\Http\Controllers\Admin\LeaveRequestController::class, 'approve'])->name('requests.approve');
     Route::patch('/requests/{leaveRequest}/reject', [App\Http\Controllers\Admin\LeaveRequestController::class, 'reject'])->name('requests.reject');
