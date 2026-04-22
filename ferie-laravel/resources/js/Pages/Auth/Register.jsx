@@ -1,7 +1,4 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
+import Button from '@/Components/h/Button';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
@@ -25,116 +22,129 @@ export default function Register() {
     };
 
     return (
-        <GuestLayout>
+        <GuestLayout title="Registrati" subtitle="Crea un account per richiedere ferie e permessi.">
             <Head title="Registrazione" />
 
-            <form onSubmit={submit} className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <InputLabel htmlFor="first_name" value="Nome" />
-                        <TextInput
+            <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <Field label="Nome" htmlFor="first_name" error={errors.first_name}>
+                        <input
                             id="first_name"
                             name="first_name"
                             value={data.first_name}
-                            className="mt-1 block w-full"
+                            className="h-input"
                             autoComplete="given-name"
-                            isFocused={true}
-                            onChange={(e) => setData('first_name', e.target.value)}
+                            autoFocus
                             required
+                            onChange={(e) => setData('first_name', e.target.value)}
                         />
-                        <InputError message={errors.first_name} className="mt-2" />
-                    </div>
-
-                    <div>
-                        <InputLabel htmlFor="last_name" value="Cognome" />
-                        <TextInput
+                    </Field>
+                    <Field label="Cognome" htmlFor="last_name" error={errors.last_name}>
+                        <input
                             id="last_name"
                             name="last_name"
                             value={data.last_name}
-                            className="mt-1 block w-full"
+                            className="h-input"
                             autoComplete="family-name"
-                            onChange={(e) => setData('last_name', e.target.value)}
                             required
+                            onChange={(e) => setData('last_name', e.target.value)}
                         />
-                        <InputError message={errors.last_name} className="mt-2" />
-                    </div>
+                    </Field>
                 </div>
 
-                <div>
-                    <InputLabel htmlFor="job_role" value="Ruolo" />
+                <Field label="Ruolo" htmlFor="job_role" error={errors.job_role}>
                     <select
                         id="job_role"
                         name="job_role"
                         value={data.job_role}
                         onChange={(e) => setData('job_role', e.target.value)}
                         required
-                        className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="h-select"
                     >
                         <option value="">Seleziona ruolo…</option>
                         {JOB_ROLES.map((r) => (
                             <option key={r} value={r}>{r}</option>
                         ))}
                     </select>
-                    <InputError message={errors.job_role} className="mt-2" />
-                </div>
+                </Field>
 
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
-                    <TextInput
+                <Field label="Email" htmlFor="email" error={errors.email}>
+                    <input
                         id="email"
                         type="email"
                         name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
+                        className="h-input"
                         autoComplete="username"
-                        onChange={(e) => setData('email', e.target.value)}
                         required
+                        onChange={(e) => setData('email', e.target.value)}
                     />
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
+                </Field>
 
-                <div>
-                    <InputLabel htmlFor="password" value="Password" />
-                    <TextInput
+                <Field label="Password" htmlFor="password" error={errors.password}>
+                    <input
                         id="password"
                         type="password"
                         name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
+                        className="h-input"
                         autoComplete="new-password"
-                        onChange={(e) => setData('password', e.target.value)}
                         required
+                        onChange={(e) => setData('password', e.target.value)}
                     />
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
+                </Field>
 
-                <div>
-                    <InputLabel htmlFor="password_confirmation" value="Conferma password" />
-                    <TextInput
+                <Field
+                    label="Conferma password"
+                    htmlFor="password_confirmation"
+                    error={errors.password_confirmation}
+                >
+                    <input
                         id="password_confirmation"
                         type="password"
                         name="password_confirmation"
                         value={data.password_confirmation}
-                        className="mt-1 block w-full"
+                        className="h-input"
                         autoComplete="new-password"
-                        onChange={(e) => setData('password_confirmation', e.target.value)}
                         required
+                        onChange={(e) => setData('password_confirmation', e.target.value)}
                     />
-                    <InputError message={errors.password_confirmation} className="mt-2" />
-                </div>
+                </Field>
 
-                <div className="flex items-center justify-end gap-4 pt-2">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 6 }}>
                     <Link
                         href={route('login')}
-                        className="text-sm text-muted-foreground underline hover:text-foreground"
+                        style={{
+                            color: 'var(--h-ink)',
+                            textDecoration: 'underline',
+                            textUnderlineOffset: 3,
+                            fontWeight: 600,
+                            fontSize: 12.5,
+                        }}
                     >
                         Hai già un account?
                     </Link>
-                    <PrimaryButton disabled={processing}>
+                    <Button type="submit" variant="primary" disabled={processing}>
                         {processing ? 'Registrazione…' : 'Registrati'}
-                    </PrimaryButton>
+                    </Button>
                 </div>
             </form>
         </GuestLayout>
+    );
+}
+
+function Field({ label, htmlFor, error, children }) {
+    return (
+        <div>
+            <label htmlFor={htmlFor} className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                {label}
+            </label>
+            {children}
+            {error && (
+                <div style={{ marginTop: 6, fontSize: 12, fontWeight: 600, color: 'var(--h-err)' }}>
+                    {error}
+                </div>
+            )}
+        </div>
     );
 }

@@ -1,8 +1,4 @@
-import Checkbox from '@/Components/Checkbox';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
+import Button from '@/Components/h/Button';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
@@ -15,92 +11,122 @@ export default function Login({ status, canResetPassword }) {
 
     const submit = (e) => {
         e.preventDefault();
-
         post(route('login'), {
             onFinish: () => reset('password'),
         });
     };
 
     return (
-        <GuestLayout>
-            <Head title="Log in" />
+        <GuestLayout title="Accedi" subtitle="Entra con le credenziali bitboss.">
+            <Head title="Accedi" />
 
             {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
+                <div
+                    style={{
+                        marginBottom: 16,
+                        padding: '10px 12px',
+                        border: '2px solid var(--h-line)',
+                        background: 'var(--h-mint)',
+                        borderRadius: 'var(--h-radius)',
+                        fontSize: 13,
+                        fontWeight: 600,
+                    }}
+                >
                     {status}
                 </div>
             )}
 
-            <form onSubmit={submit}>
+            <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
+                    <label htmlFor="email" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                        Email
+                    </label>
+                    <input
                         id="email"
                         type="email"
                         name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
+                        className="h-input"
                         autoComplete="username"
-                        isFocused={true}
+                        autoFocus
                         onChange={(e) => setData('email', e.target.value)}
                     />
-
-                    <InputError message={errors.email} className="mt-2" />
+                    {errors.email && <FieldError>{errors.email}</FieldError>}
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
+                <div>
+                    <label htmlFor="password" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                        Password
+                    </label>
+                    <input
                         id="password"
                         type="password"
                         name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
+                        className="h-input"
                         autoComplete="current-password"
                         onChange={(e) => setData('password', e.target.value)}
                     />
-
-                    <InputError message={errors.password} className="mt-2" />
+                    {errors.password && <FieldError>{errors.password}</FieldError>}
                 </div>
 
-                <div className="mt-4 block">
-                    <label className="flex items-center">
-                        <Checkbox
-                            name="remember"
-                            checked={data.remember}
-                            onChange={(e) =>
-                                setData('remember', e.target.checked)
-                            }
-                        />
-                        <span className="ms-2 text-sm text-foreground/85">
-                            Remember me
-                        </span>
-                    </label>
-                </div>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 13.5 }}>
+                    <input
+                        type="checkbox"
+                        name="remember"
+                        checked={data.remember}
+                        onChange={(e) => setData('remember', e.target.checked)}
+                        style={{
+                            width: 18,
+                            height: 18,
+                            border: '2px solid var(--h-line)',
+                            borderRadius: 3,
+                            accentColor: 'var(--h-coral)',
+                            cursor: 'pointer',
+                        }}
+                    />
+                    Ricordami su questo dispositivo
+                </label>
 
-                <div className="mt-4 flex items-center justify-between">
-                    <Link
-                        href={route('register')}
-                        className="rounded-md text-sm text-foreground/85 underline underline-offset-2 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                    >
-                        Registrati
-                    </Link>
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="rounded-md text-sm text-foreground/85 underline underline-offset-2 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                        >
-                            Forgot your password?
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 6 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12.5 }}>
+                        <Link href={route('register')} style={linkStyle}>
+                            Registrati
                         </Link>
-                    )}
+                        {canResetPassword && (
+                            <Link href={route('password.request')} style={linkStyle}>
+                                Password dimenticata?
+                            </Link>
+                        )}
+                    </div>
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
-                    </PrimaryButton>
+                    <Button type="submit" variant="primary" disabled={processing}>
+                        {processing ? 'Accesso…' : 'Accedi'}
+                    </Button>
                 </div>
             </form>
         </GuestLayout>
+    );
+}
+
+const linkStyle = {
+    color: 'var(--h-ink)',
+    textDecoration: 'underline',
+    textUnderlineOffset: 3,
+    fontWeight: 600,
+};
+
+function FieldError({ children }) {
+    return (
+        <div
+            style={{
+                marginTop: 6,
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'var(--h-err)',
+            }}
+        >
+            {children}
+        </div>
     );
 }
