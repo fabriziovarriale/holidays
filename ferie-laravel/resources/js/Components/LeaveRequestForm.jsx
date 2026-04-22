@@ -1,12 +1,8 @@
+import Button from '@/Components/h/Button';
+import Icon from '@/Components/h/Icon';
+import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
 import DatePickerField, { parseYmdToLocalDate } from '@/Components/DatePickerField';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
-import Select from '@/Components/Select';
 import SlideoverAlert from '@/Components/SlideoverAlert';
-import TextInput from '@/Components/TextInput';
-import Textarea from '@/Components/Textarea';
 import { useForm, usePage } from '@inertiajs/react';
 import { addDays, startOfDay } from 'date-fns';
 import { useEffect, useMemo, useRef } from 'react';
@@ -24,6 +20,28 @@ function workingDaysBetween(startDate, endDate) {
         cursor.setDate(cursor.getDate() + 1);
     }
     return count;
+}
+
+function FieldError({ message }) {
+    if (!message) return null;
+    return (
+        <div style={{ marginTop: 6, fontSize: 12, fontWeight: 600, color: 'var(--h-err)' }}>
+            {message}
+        </div>
+    );
+}
+
+function FieldLabel({ htmlFor, children, optional }) {
+    return (
+        <label htmlFor={htmlFor} className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+            {children}
+            {optional && (
+                <span className="h-muted" style={{ textTransform: 'none', fontWeight: 400, marginLeft: 6 }}>
+                    (facoltativo)
+                </span>
+            )}
+        </label>
+    );
 }
 
 export default function LeaveRequestForm({
@@ -143,107 +161,176 @@ export default function LeaveRequestForm({
         });
     };
 
+    const showWorkingDaysCard =
+        selectedType?.unit === 'days' && data.startDate && data.endDate && estimatedDays != null;
+
     return (
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={submit} style={{ display: 'grid', gap: 18 }}>
             {showEmployeeSelect && (
                 <div>
-                    <InputLabel htmlFor="userId" value="Dipendente" />
+                    <FieldLabel htmlFor="userId">Dipendente</FieldLabel>
                     {hasEmployees ? (
                         <>
-                            <Select
+                            <select
                                 id="userId"
+                                className="h-select"
                                 value={data.userId}
-                                onChange={(v) => setData('userId', v)}
-                                options={employeesList}
-                                optionValue="id"
-                                optionLabel="label"
-                            />
-                            <InputError message={errors.userId} className="mt-2" />
+                                onChange={(e) => setData('userId', e.target.value)}
+                            >
+                                {employeesList.map((emp) => (
+                                    <option key={emp.id} value={emp.id}>{emp.label}</option>
+                                ))}
+                            </select>
+                            <FieldError message={errors.userId} />
                         </>
                     ) : (
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <div className="h-muted" style={{ fontSize: 13 }}>
                             Nessun dipendente disponibile. Aggiungi utenti dalla pagina Utenti.
-                        </p>
+                        </div>
                     )}
                 </div>
             )}
 
-            <p className="text-sm text-muted-foreground">
-                I giorni lavorativi vengono calcolati escludendo weekend e festività (se presenti).
-            </p>
-
             <div>
-                <InputLabel htmlFor="leaveType" value="Tipo assenza" />
-                <Select
-                    id="leaveType"
-                    value={data.leaveType}
-                    onChange={(v) => setData('leaveType', v)}
-                    options={leaveTypes}
-                    optionValue="code"
-                    optionLabel="label"
-                />
-                <InputError message={errors.leaveType} className="mt-2" />
+                <FieldLabel>Tipo di assenza</FieldLabel>
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(leaveTypes.length, 4)}, 1fr)`, gap: 8 }}>
+                    {leaveTypes.map((lt) => {
+                        const active = data.leaveType === lt.code;
+                        return (
+                            <button
+                                type="button"
+                                key={lt.code}
+                                onClick={() => setData('leaveType', lt.code)}
+                                className="h-btn"
+                                style={{
+                                    padding: '12px 8px',
+                                    flexDirection: 'column',
+                                    gap: 6,
+                                    fontSize: 12,
+                                    background: active ? 'var(--h-coral)' : 'var(--h-surface)',
+                                    color: 'var(--h-ink)',
+                                    boxShadow: active ? 'var(--h-shadow-sm)' : 'none',
+                                }}
+                            >
+                                <LeaveTypeTag code={lt.code} />
+                                <span className="h-mono" style={{ fontSize: 10, textTransform: 'uppercase' }}>
+                                    {lt.unit === 'hours' ? 'ore' : 'giorni'}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+                <FieldError message={errors.leaveType} />
             </div>
 
             {selectedType?.unit === 'hours' && (
                 <div>
-                    <InputLabel htmlFor="requestedUnits" value="Ore richieste" />
-                    <TextInput
+                    <FieldLabel htmlFor="requestedUnits">Ore richieste</FieldLabel>
+                    <input
                         id="requestedUnits"
                         type="number"
                         min={1}
+                        className="h-input h-mono"
                         value={data.requestedUnits ?? ''}
                         onChange={(e) => setData('requestedUnits', e.target.value)}
-                        className="mt-1 block w-full"
                     />
-                    <InputError message={errors.requestedUnits} className="mt-2" />
+                    <FieldError message={errors.requestedUnits} />
                 </div>
             )}
 
             {data.leaveType === 'MALATTIA' && (
                 <div>
-                    <InputLabel htmlFor="sickCertificatePuc" value="Numero protocollo certificato (PUC)" />
-                    <TextInput
+                    <FieldLabel htmlFor="sickCertificatePuc">Numero PUC certificato</FieldLabel>
+                    <input
                         id="sickCertificatePuc"
                         type="text"
+                        className="h-input h-mono"
+                        placeholder="2026-XXXXXXX"
                         value={data.sickCertificatePuc ?? ''}
                         onChange={(e) => setData('sickCertificatePuc', e.target.value)}
-                        className="mt-1 block w-full"
-                        placeholder="Es. 1234567890"
                         required
                     />
-                    <p className="mt-1 text-xs text-muted-foreground">
-                        Obbligatorio per la malattia: comunica il PUC al datore di lavoro.
-                    </p>
-                    <InputError message={errors.sickCertificatePuc} className="mt-2" />
+                    <div className="h-muted" style={{ fontSize: 11, marginTop: 4 }}>
+                        Obbligatorio per le assenze per malattia (comunicazione INPS).
+                    </div>
+                    <FieldError message={errors.sickCertificatePuc} />
                 </div>
             )}
 
-            {selectedType?.deductsBalance &&
-                selectedType?.unit === 'days' &&
-                data.startDate &&
-                data.endDate && (
-                    <p className="text-sm text-muted-foreground">
-                        Giorni lavorativi stimati: <strong>{estimatedDays}</strong>
-                        {displayBalance != null && (
-                            <> • Residui: {displayBalance.remaining}</>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                    <FieldLabel htmlFor="startDate">Inizio</FieldLabel>
+                    <DatePickerField
+                        id="startDate"
+                        value={data.startDate ?? ''}
+                        onChange={(v) => setData('startDate', v)}
+                        minDate={noticeMinStartDate}
+                        required
+                    />
+                    {errors.startDate && !hasBudgetError && !hasSickOverlapError && (
+                        <FieldError message={errors.startDate} />
+                    )}
+                </div>
+                <div>
+                    <FieldLabel htmlFor="endDate">Fine</FieldLabel>
+                    <DatePickerField
+                        id="endDate"
+                        value={data.endDate ?? ''}
+                        onChange={(v) => setData('endDate', v)}
+                        minDate={parseYmdToLocalDate(data.startDate) ?? noticeMinStartDate}
+                        required
+                    />
+                    <FieldError message={errors.endDate} />
+                </div>
+            </div>
+
+            {showWorkingDaysCard && (
+                <div
+                    className="h-card h-card-flat"
+                    style={{
+                        padding: 14,
+                        background: 'var(--h-bg-2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 16,
+                    }}
+                >
+                    <div>
+                        <div className="h-mono h-muted" style={{ fontSize: 10, letterSpacing: '0.08em' }}>
+                            GIORNI LAVORATIVI
+                        </div>
+                        <div className="h-display" style={{ fontSize: 32 }}>{estimatedDays}g</div>
+                    </div>
+                    <div style={{ flex: 1, fontSize: 12 }}>
+                        <div>
+                            Dal <b>{new Date(data.startDate).toLocaleDateString('it-IT')}</b> al{' '}
+                            <b>{new Date(data.endDate).toLocaleDateString('it-IT')}</b>
+                        </div>
+                        <div className="h-muted">Esclusi weekend e festività.</div>
+                        {displayBalance != null && selectedType?.deductsBalance && (
+                            <div style={{ marginTop: 4 }}>
+                                Residui disponibili: <b className="h-mono">{displayBalance.remaining}</b>
+                            </div>
                         )}
-                    </p>
-                )}
+                    </div>
+                </div>
+            )}
 
             {selectedType?.unit === 'days' &&
                 maxConsecutiveDays != null &&
                 estimatedDays != null &&
                 estimatedDays > maxConsecutiveDays && (
-                    <p className="text-sm text-destructive">
-                        Superi il massimo consentito di {maxConsecutiveDays} giorni consecutivi.
-                    </p>
+                    <SlideoverAlert
+                        variant="error"
+                        title="Limite consecutivi superato"
+                        body={`Superi il massimo consentito di ${maxConsecutiveDays} giorni consecutivi.`}
+                    />
                 )}
 
             {selectedType?.noticeDaysRequired > 0 && (
-                <p className="text-sm text-muted-foreground">
-                    Preavviso richiesto: {selectedType.noticeDaysRequired} giorni.
-                </p>
+                <div className="h-muted" style={{ fontSize: 12 }}>
+                    Preavviso richiesto: <b>{selectedType.noticeDaysRequired}</b> giorni.
+                </div>
             )}
 
             {missingLeaveBudgetForStore && !hasBudgetError && (
@@ -253,33 +340,6 @@ export default function LeaveRequestForm({
                     body={`Non risulta un budget assegnato per il ${leaveStoreYear}. Contatta l'amministratore per impostare i giorni disponibili prima di inviare richieste che scalano il saldo.`}
                 />
             )}
-
-            <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                    <InputLabel htmlFor="startDate" value="Data inizio" />
-                    <DatePickerField
-                        id="startDate"
-                        value={data.startDate ?? ''}
-                        onChange={(v) => setData('startDate', v)}
-                        minDate={noticeMinStartDate}
-                        required
-                    />
-                    {errors.startDate && !hasBudgetError && !hasSickOverlapError && (
-                        <InputError message={errors.startDate} className="mt-2" />
-                    )}
-                </div>
-                <div>
-                    <InputLabel htmlFor="endDate" value="Data fine" />
-                    <DatePickerField
-                        id="endDate"
-                        value={data.endDate ?? ''}
-                        onChange={(v) => setData('endDate', v)}
-                        minDate={parseYmdToLocalDate(data.startDate) ?? noticeMinStartDate}
-                        required
-                    />
-                    <InputError message={errors.endDate} className="mt-2" />
-                </div>
-            </div>
 
             {hasSickOverlapError && (
                 <SlideoverAlert
@@ -291,17 +351,20 @@ export default function LeaveRequestForm({
 
             {isAttachmentRequired && (
                 <div>
-                    <InputLabel htmlFor="attachment" value="Allegato" />
+                    <FieldLabel htmlFor="attachment">Allegato (PDF/JPG/PNG · max 2MB)</FieldLabel>
                     <input
                         id="attachment"
                         type="file"
                         accept=".pdf,.png,.jpg,.jpeg"
                         onChange={(e) => setData('attachment', e.target.files?.[0] ?? null)}
-                        className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm file:mr-4 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-accent"
+                        className="h-input"
+                        style={{ padding: 8 }}
                         required
                     />
-                    <p className="mt-1 text-xs text-muted-foreground">PDF o immagine (max 2MB).</p>
-                    <InputError message={errors.attachment} className="mt-2" />
+                    <div className="h-muted" style={{ fontSize: 11, marginTop: 4 }}>
+                        PDF o immagine (max 2MB).
+                    </div>
+                    <FieldError message={errors.attachment} />
                 </div>
             )}
 
@@ -326,24 +389,26 @@ export default function LeaveRequestForm({
             )}
 
             <div>
-                <InputLabel htmlFor="note" value="Note opzionali" />
-                <Textarea
+                <FieldLabel htmlFor="note" optional>Nota per l'admin</FieldLabel>
+                <textarea
                     id="note"
+                    className="h-textarea"
+                    rows={3}
                     value={data.note ?? ''}
                     onChange={(e) => setData('note', e.target.value)}
-                    rows={3}
-                    placeholder="Es. visita medica"
+                    placeholder="Es. matrimonio di un amico, visita medica..."
                 />
-                <InputError message={errors.note} className="mt-2" />
+                <FieldError message={errors.note} />
             </div>
 
-            <div className="flex gap-3 pt-2">
-                <PrimaryButton disabled={processing}>
-                    {processing ? 'Invio...' : 'Invia richiesta'}
-                </PrimaryButton>
-                <SecondaryButton type="button" onClick={onSuccess}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 4 }}>
+                <Button type="button" variant="ghost" onClick={onSuccess} disabled={processing}>
                     Annulla
-                </SecondaryButton>
+                </Button>
+                <Button type="submit" variant="primary" disabled={processing}>
+                    <Icon name="check" size={14} />
+                    {processing ? 'Invio…' : 'Invia richiesta'}
+                </Button>
             </div>
         </form>
     );

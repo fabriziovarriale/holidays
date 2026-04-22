@@ -1,10 +1,17 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
+import Button from '@/Components/h/Button';
+import Icon from '@/Components/h/Icon';
 import { Transition } from '@headlessui/react';
 import { useForm } from '@inertiajs/react';
 import { useRef } from 'react';
+
+function FieldError({ message }) {
+    if (!message) return null;
+    return (
+        <div style={{ marginTop: 6, fontSize: 12, fontWeight: 600, color: 'var(--h-err)' }}>
+            {message}
+        </div>
+    );
+}
 
 export default function UpdatePasswordForm() {
     const passwordInput = useRef();
@@ -21,14 +28,14 @@ export default function UpdatePasswordForm() {
         put(route('password.update'), {
             preserveScroll: true,
             onSuccess: () => reset(),
-            onError: (errors) => {
-                if (errors.password) {
+            onError: (errs) => {
+                if (errs.password) {
                     reset('password', 'password_confirmation');
-                    passwordInput.current.focus();
+                    passwordInput.current?.focus();
                 }
-                if (errors.current_password) {
+                if (errs.current_password) {
                     reset('current_password');
-                    currentPasswordInput.current.focus();
+                    currentPasswordInput.current?.focus();
                 }
             },
         });
@@ -36,59 +43,66 @@ export default function UpdatePasswordForm() {
 
     return (
         <section>
-            <header className="mb-6">
-                <h3 className="text-base font-semibold text-foreground">Cambia password</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
+            <header style={{ marginBottom: 18 }}>
+                <h3 className="h-heading" style={{ fontSize: 18 }}>Sicurezza</h3>
+                <p className="h-muted" style={{ fontSize: 13, marginTop: 4 }}>
                     Usa una password lunga e casuale per mantenere il tuo account sicuro.
                 </p>
             </header>
 
-            <form onSubmit={updatePassword} className="space-y-4">
+            <form onSubmit={updatePassword} style={{ display: 'grid', gap: 12, maxWidth: 460 }}>
                 <div>
-                    <InputLabel htmlFor="current_password" value="Password attuale" />
-                    <TextInput
+                    <label htmlFor="current_password" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                        Password attuale
+                    </label>
+                    <input
                         id="current_password"
                         ref={currentPasswordInput}
+                        type="password"
+                        className="h-input"
                         value={data.current_password}
                         onChange={(e) => setData('current_password', e.target.value)}
-                        type="password"
-                        className="mt-1 block w-full"
                         autoComplete="current-password"
                     />
-                    <InputError message={errors.current_password} className="mt-2" />
+                    <FieldError message={errors.current_password} />
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="password" value="Nuova password" />
-                    <TextInput
+                    <label htmlFor="password" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                        Nuova password
+                    </label>
+                    <input
                         id="password"
                         ref={passwordInput}
+                        type="password"
+                        className="h-input"
                         value={data.password}
                         onChange={(e) => setData('password', e.target.value)}
-                        type="password"
-                        className="mt-1 block w-full"
                         autoComplete="new-password"
                     />
-                    <InputError message={errors.password} className="mt-2" />
+                    <FieldError message={errors.password} />
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="password_confirmation" value="Conferma nuova password" />
-                    <TextInput
+                    <label htmlFor="password_confirmation" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                        Conferma nuova password
+                    </label>
+                    <input
                         id="password_confirmation"
+                        type="password"
+                        className="h-input"
                         value={data.password_confirmation}
                         onChange={(e) => setData('password_confirmation', e.target.value)}
-                        type="password"
-                        className="mt-1 block w-full"
                         autoComplete="new-password"
                     />
-                    <InputError message={errors.password_confirmation} className="mt-2" />
+                    <FieldError message={errors.password_confirmation} />
                 </div>
 
-                <div className="flex items-center gap-4 pt-2">
-                    <PrimaryButton disabled={processing}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 6 }}>
+                    <Button type="submit" variant="primary" disabled={processing}>
+                        <Icon name="lock" size={14} />
                         {processing ? 'Salvataggio…' : 'Aggiorna password'}
-                    </PrimaryButton>
+                    </Button>
                     <Transition
                         show={recentlySuccessful}
                         enter="transition ease-in-out duration-300"
@@ -96,7 +110,9 @@ export default function UpdatePasswordForm() {
                         leave="transition ease-in-out duration-300"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-emerald-600 dark:text-emerald-400">Salvato.</p>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--h-ok)' }}>
+                            ✓ Salvato.
+                        </span>
                     </Transition>
                 </div>
             </form>

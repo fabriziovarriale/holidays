@@ -1,9 +1,17 @@
+import Button from '@/Components/h/Button';
+import Icon from '@/Components/h/Icon';
 import ConfirmDialog from '@/Components/ConfirmDialog';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import TextInput from '@/Components/TextInput';
 import { useForm } from '@inertiajs/react';
 import { useRef, useState } from 'react';
+
+function FieldError({ message }) {
+    if (!message) return null;
+    return (
+        <div style={{ marginTop: 6, fontSize: 12, fontWeight: 600, color: 'var(--h-err)' }}>
+            {message}
+        </div>
+    );
+}
 
 export default function DeleteUserForm() {
     const [confirmOpen, setConfirmOpen] = useState(false);
@@ -30,20 +38,22 @@ export default function DeleteUserForm() {
 
     return (
         <section>
-            <header className="mb-6">
-                <h3 className="text-base font-semibold text-foreground">Elimina account</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
+            <header style={{ marginBottom: 14 }}>
+                <h3 className="h-heading" style={{ fontSize: 18 }}>Zona pericolo</h3>
+                <p style={{ fontSize: 13, marginTop: 4 }}>
                     Una volta eliminato, tutti i dati del tuo account verranno rimossi definitivamente.
+                    Scarica prima le informazioni che vuoi conservare.
                 </p>
             </header>
 
-            <button
+            <Button
                 type="button"
                 onClick={() => setConfirmOpen(true)}
-                className="inline-flex items-center rounded-md border border-destructive px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                style={{ background: 'var(--h-ink)', color: 'var(--h-bg)' }}
             >
+                <Icon name="x" size={14} />
                 Elimina account
-            </button>
+            </Button>
 
             <ConfirmDialog
                 show={confirmOpen}
@@ -55,22 +65,24 @@ export default function DeleteUserForm() {
                 confirmLabel="Elimina definitivamente"
                 cancelLabel="Annulla"
                 message={
-                    <div className="space-y-3">
-                        <p className="text-sm text-muted-foreground">
+                    <div style={{ display: 'grid', gap: 12 }}>
+                        <p style={{ fontSize: 13 }}>
                             Questa operazione è irreversibile. Inserisci la tua password per confermare.
                         </p>
                         <div>
-                            <InputLabel htmlFor="delete_password" value="Password" className="sr-only" />
-                            <TextInput
+                            <label htmlFor="delete_password" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                                Password
+                            </label>
+                            <input
                                 id="delete_password"
-                                type="password"
                                 ref={passwordInput}
+                                type="password"
+                                className="h-input"
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
-                                className="block w-full"
                                 placeholder="La tua password"
                             />
-                            <InputError message={errors.password} className="mt-2" />
+                            <FieldError message={errors.password} />
                         </div>
                     </div>
                 }

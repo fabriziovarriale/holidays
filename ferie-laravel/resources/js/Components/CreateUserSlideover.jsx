@@ -1,18 +1,18 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
-import Select from '@/Components/Select';
+import Button from '@/Components/h/Button';
+import Icon from '@/Components/h/Icon';
 import Slideover from '@/Components/Slideover';
-import TextInput from '@/Components/TextInput';
 import { useForm } from '@inertiajs/react';
 
-const JOB_ROLE_OPTIONS = [
-    { id: 'Designer', name: 'Designer' },
-    { id: 'PM', name: 'PM' },
-    { id: 'Developer', name: 'Developer' },
-    { id: 'Socio', name: 'Socio' },
-];
+const JOB_ROLES = ['Designer', 'PM', 'Developer', 'Socio'];
+
+function FieldError({ message }) {
+    if (!message) return null;
+    return (
+        <div style={{ marginTop: 6, fontSize: 12, fontWeight: 600, color: 'var(--h-err)' }}>
+            {message}
+        </div>
+    );
+}
 
 export default function CreateUserSlideover({ show, onClose }) {
     const { data, setData, post, reset, processing, errors } = useForm({
@@ -32,92 +32,114 @@ export default function CreateUserSlideover({ show, onClose }) {
     };
 
     return (
-        <Slideover show={show} onClose={onClose} title="Nuovo utente">
-            <form onSubmit={submit} className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
+        <Slideover
+            show={show}
+            onClose={onClose}
+            title="Nuovo utente"
+            footer={
+                <>
+                    <Button type="button" variant="ghost" onClick={onClose} disabled={processing}>
+                        Annulla
+                    </Button>
+                    <Button type="submit" form="createUserForm" variant="primary" disabled={processing}>
+                        <Icon name="check" size={14} />
+                        {processing ? 'Creazione…' : 'Crea utente'}
+                    </Button>
+                </>
+            }
+        >
+            <form id="createUserForm" onSubmit={submit} style={{ display: 'grid', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div>
-                        <InputLabel htmlFor="firstName" value="Nome" />
-                        <TextInput
+                        <label htmlFor="firstName" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                            Nome
+                        </label>
+                        <input
                             id="firstName"
+                            className="h-input"
                             value={data.firstName}
                             onChange={(e) => setData('firstName', e.target.value)}
-                            className="mt-1 block w-full"
                             required
                         />
-                        <InputError message={errors.firstName} className="mt-2" />
+                        <FieldError message={errors.firstName} />
                     </div>
                     <div>
-                        <InputLabel htmlFor="lastName" value="Cognome" />
-                        <TextInput
+                        <label htmlFor="lastName" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                            Cognome
+                        </label>
+                        <input
                             id="lastName"
+                            className="h-input"
                             value={data.lastName}
                             onChange={(e) => setData('lastName', e.target.value)}
-                            className="mt-1 block w-full"
                             required
                         />
-                        <InputError message={errors.lastName} className="mt-2" />
+                        <FieldError message={errors.lastName} />
                     </div>
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
-                    <TextInput
+                    <label htmlFor="email" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                        Email
+                    </label>
+                    <input
                         id="email"
                         type="email"
+                        className="h-input"
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
-                        className="mt-1 block w-full"
                         required
                     />
-                    <InputError message={errors.email} className="mt-2" />
+                    <FieldError message={errors.email} />
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="password" value="Password" />
-                    <TextInput
-                        id="password"
-                        type="password"
-                        value={data.password}
-                        onChange={(e) => setData('password', e.target.value)}
-                        className="mt-1 block w-full"
-                        required
-                    />
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="password_confirmation" value="Conferma password" />
-                    <TextInput
-                        id="password_confirmation"
-                        type="password"
-                        value={data.password_confirmation}
-                        onChange={(e) => setData('password_confirmation', e.target.value)}
-                        className="mt-1 block w-full"
-                        required
-                    />
-                    <InputError message={errors.password_confirmation} className="mt-2" />
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="jobRole" value="Ruolo" />
-                    <Select
+                    <label htmlFor="jobRole" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                        Ruolo professionale
+                    </label>
+                    <select
                         id="jobRole"
+                        className="h-select"
                         value={data.jobRole}
-                        onChange={(v) => setData('jobRole', v)}
-                        options={JOB_ROLE_OPTIONS}
-                        optionValue="id"
-                        optionLabel="name"
-                    />
-                    <InputError message={errors.jobRole} className="mt-2" />
+                        onChange={(e) => setData('jobRole', e.target.value)}
+                    >
+                        <option value="">Seleziona ruolo…</option>
+                        {JOB_ROLES.map((r) => (
+                            <option key={r} value={r}>{r}</option>
+                        ))}
+                    </select>
+                    <FieldError message={errors.jobRole} />
                 </div>
 
-                <div className="flex gap-3 pt-2">
-                    <PrimaryButton disabled={processing}>
-                        {processing ? 'Creazione...' : 'Crea utente'}
-                    </PrimaryButton>
-                    <SecondaryButton type="button" onClick={onClose}>
-                        Annulla
-                    </SecondaryButton>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                        <label htmlFor="password" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                            Password
+                        </label>
+                        <input
+                            id="password"
+                            type="password"
+                            className="h-input"
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                            required
+                        />
+                        <FieldError message={errors.password} />
+                    </div>
+                    <div>
+                        <label htmlFor="password_confirmation" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                            Conferma password
+                        </label>
+                        <input
+                            id="password_confirmation"
+                            type="password"
+                            className="h-input"
+                            value={data.password_confirmation}
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                            required
+                        />
+                        <FieldError message={errors.password_confirmation} />
+                    </div>
                 </div>
             </form>
         </Slideover>

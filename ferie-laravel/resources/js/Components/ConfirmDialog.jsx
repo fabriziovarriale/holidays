@@ -26,7 +26,10 @@ export default function ConfirmDialog({
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="absolute inset-0 bg-black/50" />
+                    <div
+                        className="absolute inset-0"
+                        style={{ background: 'rgba(10,10,10,0.45)' }}
+                    />
                 </TransitionChild>
 
                 <TransitionChild
@@ -37,20 +40,31 @@ export default function ConfirmDialog({
                     leaveFrom="opacity-100 scale-100"
                     leaveTo="opacity-0 scale-95"
                 >
-                    <DialogPanel className="relative w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-xl">
+                    <DialogPanel
+                        className="h-card"
+                        style={{
+                            position: 'relative',
+                            width: '100%',
+                            maxWidth: 440,
+                            padding: 22,
+                            background: 'var(--h-surface)',
+                        }}
+                    >
                         {title && (
-                            <h3 className="mb-2 text-base font-semibold text-foreground">{title}</h3>
+                            <h3 className="h-heading" style={{ fontSize: 18, marginBottom: 8 }}>
+                                {title}
+                            </h3>
                         )}
                         {message && (
-                            <div className="text-sm text-muted-foreground">{message}</div>
+                            <div style={{ fontSize: 13 }}>{message}</div>
                         )}
 
-                        <div className="mt-6 flex justify-end gap-3">
+                        <div style={{ marginTop: 22, display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                             <button
                                 type="button"
                                 onClick={onCancel}
                                 disabled={processing}
-                                className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-50"
+                                className="h-btn h-btn-ghost"
                             >
                                 {cancelLabel}
                             </button>
@@ -58,13 +72,14 @@ export default function ConfirmDialog({
                                 type="button"
                                 onClick={onConfirm}
                                 disabled={processing}
-                                className={`rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 ${
+                                className="h-btn"
+                                style={
                                     destructive
-                                        ? 'bg-destructive text-destructive-foreground hover:opacity-90'
-                                        : 'bg-primary text-primary-foreground hover:opacity-90'
-                                }`}
+                                        ? { background: 'var(--h-ink)', color: 'var(--h-bg)' }
+                                        : { background: 'var(--h-coral)', color: 'var(--h-ink)' }
+                                }
                             >
-                                {processing ? 'Eliminazione...' : confirmLabel}
+                                {processing ? 'Eliminazione…' : confirmLabel}
                             </button>
                         </div>
                     </DialogPanel>

@@ -1,18 +1,88 @@
+import Button from '@/Components/h/Button';
+import Icon from '@/Components/h/Icon';
+import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
+import StatusBadge from '@/Components/h/StatusBadge';
 import ConfirmDialog from '@/Components/ConfirmDialog';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
 import Slideover from '@/Components/Slideover';
-import SlideoverAlert from '@/Components/SlideoverAlert';
-import Textarea from '@/Components/Textarea';
 import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
-const STATUS_LABELS = {
-    PENDING: 'In attesa',
-    APPROVED: 'Approvata',
-    REJECTED: 'Rifiutata',
-    CANCELLED: 'Annullata',
-};
+function fmtIT(value) {
+    if (!value) return '—';
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function fmtITShort(value) {
+    if (!value) return '—';
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
+}
+
+function fmtITDateTime(value) {
+    if (!value) return null;
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleString('it-IT', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function initialsOf(fullName) {
+    if (!fullName) return '—';
+    const parts = fullName.trim().split(/\s+/);
+    const a = (parts[0]?.[0] || '').toUpperCase();
+    const b = (parts[1]?.[0] || '').toUpperCase();
+    return (a + b) || '—';
+}
+
+function DetailRow({ label, value }) {
+    return (
+        <div
+            style={{
+                display: 'grid',
+                gridTemplateColumns: '140px 1fr',
+                gap: 10,
+                padding: '8px 0',
+                borderBottom: '2px dashed var(--h-line)',
+            }}
+        >
+            <div className="h-label">{label}</div>
+            <div style={{ fontSize: 13 }}>{value}</div>
+        </div>
+    );
+}
+
+function TimelineStep({ done, pending, error, label, when }) {
+    return (
+        <li style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div
+                style={{
+                    width: 20,
+                    height: 20,
+                    border: '2.5px solid var(--h-line)',
+                    borderRadius: '50%',
+                    background: error
+                        ? 'var(--h-rose)'
+                        : done
+                            ? 'var(--h-mint)'
+                            : pending
+                                ? 'var(--h-yellow)'
+                                : 'var(--h-surface)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 10,
+                    flexShrink: 0,
+                }}
+            >
+                {done && !error ? '✓' : error ? '✕' : pending ? '·' : ''}
+            </div>
+            <div style={{ flex: 1, fontSize: 13, fontWeight: done || error ? 700 : 500 }}>{label}</div>
+            <div className="h-mono h-muted" style={{ fontSize: 11 }}>{when || '—'}</div>
+        </li>
+    );
+}
 
 export default function RequestDetailSlideover({ request: req, show, onClose, variant = 'admin' }) {
     const [rejectNote, setRejectNote] = useState('');
@@ -81,178 +151,236 @@ export default function RequestDetailSlideover({ request: req, show, onClose, va
         router.patch(route('leave-request.cancel', req.id), {}, {
             preserveScroll: true,
             onFinish: () => setProcessing(false),
-            onSuccess: () => {
-                setCancelConfirmOpen(false);
-                onClose();
-            },
+            onSuccess: () => { setCancelConfirmOpen(false); onClose(); },
         });
     };
 
-    const createdLabel = req.createdAt
-        ? new Date(req.createdAt).toLocaleString('it-IT', {
-            dateStyle: 'medium',
-            timeStyle: 'short',
-        })
-        : null;
+    const title = `Richiesta${req.id ? ` #${req.id}` : ''}`;
+    const createdLabel = fmtITDateTime(req.createdAt);
+    const isMalattia = String(req.leaveType ?? '').toUpperCase() === 'MALATTIA';
+
+    const footer = (() => {
+        if (canApprove) {
+            return (
+                <>
+                    <Button
+                        type="button"
+                        onClick={handleReject}
+                        disabled={processing}
+                        style={{ background: 'var(--h-rose)' }}
+                    >
+                        <Icon name="x" size={14} />
+                        Rifiuta
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="primary"
+                        onClick={handleApprove}
+                        disabled={processing}
+                    >
+                        <Icon name="check" size={14} />
+                        Approva
+                    </Button>
+                </>
+            );
+        }
+        if (canEmployeeCancel) {
+            return (
+                <>
+                    <Button type="button" variant="ghost" onClick={onClose}>Chiudi</Button>
+                    <Button
+                        type="button"
+                        onClick={() => setCancelConfirmOpen(true)}
+                        disabled={processing}
+                        style={{ background: 'var(--h-rose)' }}
+                    >
+                        Annulla richiesta
+                    </Button>
+                </>
+            );
+        }
+        if (canRevoke) {
+            return (
+                <>
+                    <Button type="button" variant="ghost" onClick={onClose}>Chiudi</Button>
+                    <Button
+                        type="button"
+                        onClick={() => setRevokeConfirmOpen(true)}
+                        disabled={processing}
+                        style={{ background: 'var(--h-yellow)' }}
+                    >
+                        Revoca approvazione
+                    </Button>
+                </>
+            );
+        }
+        return <Button type="button" variant="ghost" onClick={onClose}>Chiudi</Button>;
+    })();
 
     return (
-        <Slideover show={show} onClose={onClose} title="Dettaglio richiesta">
-            <div className="space-y-4">
-                {!isEmployee && req.roleConflictWarning && (
-                    <SlideoverAlert
-                        variant="warning"
-                        title="Conflitto di ruolo"
-                        body={req.roleConflictWarning}
-                    />
+        <Slideover show={show} onClose={onClose} title={title} footer={footer}>
+            <div style={{ display: 'grid', gap: 16 }}>
+                {!isEmployee && req.userFullName && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                        <span className="h-avatar lg">{initialsOf(req.userFullName)}</span>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 700, fontSize: 18 }}>{req.userFullName}</div>
+                            <div className="h-muted" style={{ fontSize: 12 }}>
+                                {req.userJobRole && (
+                                    <span className="h-chip" style={{ marginRight: 6 }}>{req.userJobRole}</span>
+                                )}
+                                {req.userEmail}
+                            </div>
+                        </div>
+                        <StatusBadge status={req.status} />
+                    </div>
                 )}
-                <dl className="space-y-3">
-                    {!isEmployee && (
+
+                {isEmployee && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <StatusBadge status={req.status} />
+                    </div>
+                )}
+
+                <div
+                    className="h-card h-card-flat"
+                    style={{ padding: 18, background: 'var(--h-bg-2)' }}
+                >
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gap: 16,
+                            alignItems: 'center',
+                        }}
+                    >
                         <div>
-                            <dt className="text-sm text-muted-foreground">Dipendente</dt>
-                            <dd className="font-medium text-foreground">{req.userFullName}</dd>
+                            <div className="h-mono h-muted" style={{ fontSize: 10, letterSpacing: '0.08em' }}>PERIODO</div>
+                            <div className="h-display" style={{ fontSize: 18, marginTop: 4 }}>
+                                {fmtITShort(req.startDate)}
+                                <span style={{ margin: '0 6px' }}>—</span>
+                                {fmtITShort(req.endDate)}
+                            </div>
                         </div>
-                    )}
-                    {createdLabel && (
                         <div>
-                            <dt className="text-sm text-muted-foreground">Inviata il</dt>
-                            <dd className="text-foreground">{createdLabel}</dd>
+                            <div className="h-mono h-muted" style={{ fontSize: 10, letterSpacing: '0.08em' }}>TIPO</div>
+                            <div style={{ marginTop: 6 }}><LeaveTypeTag code={req.leaveType} /></div>
                         </div>
+                        <div>
+                            <div className="h-mono h-muted" style={{ fontSize: 10, letterSpacing: '0.08em' }}>DURATA</div>
+                            <div className="h-display" style={{ fontSize: 22, marginTop: 4 }}>
+                                {req.requestedUnits}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {!isEmployee && req.roleConflictWarning && (
+                    <div
+                        className="h-card h-card-flat"
+                        style={{ padding: 14, background: 'var(--h-rose)' }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13 }}>
+                            <Icon name="warning" size={14} /> Conflitto di ruolo
+                        </div>
+                        <div style={{ fontSize: 12, marginTop: 4 }}>
+                            {req.roleConflictWarning}
+                        </div>
+                    </div>
+                )}
+
+                <div style={{ display: 'grid', gap: 0 }}>
+                    {createdLabel && <DetailRow label="Inviata il" value={createdLabel} />}
+                    <DetailRow
+                        label="Stato"
+                        value={<StatusBadge status={req.status} />}
+                    />
+                    {isMalattia && req.sickCertificatePuc && (
+                        <DetailRow label="PUC" value={<span className="h-mono">{req.sickCertificatePuc}</span>} />
                     )}
-                    <div>
-                        <dt className="text-sm text-muted-foreground">Tipo</dt>
-                        <dd className="text-foreground">{req.leaveType}</dd>
-                    </div>
-                    <div>
-                        <dt className="text-sm text-muted-foreground">Periodo</dt>
-                        <dd className="text-foreground">{req.startDate} — {req.endDate}</dd>
-                    </div>
-                    <div>
-                        <dt className="text-sm text-muted-foreground">Giorni/Ore richieste</dt>
-                        <dd className="text-foreground">{req.requestedUnits}</dd>
-                    </div>
-                    <div>
-                        <dt className="text-sm text-muted-foreground">Stato</dt>
-                        <dd>
-                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                req.status === 'PENDING' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400' :
-                                req.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
-                                req.status === 'REJECTED' ? 'bg-destructive/20 text-destructive' :
-                                'bg-muted text-muted-foreground'
-                            }`}>
-                                {STATUS_LABELS[req.status] || req.status}
-                            </span>
-                        </dd>
-                    </div>
                     {req.noteUser && (
-                        <div>
-                            <dt className="text-sm text-muted-foreground">Note dipendente</dt>
-                            <dd className="text-foreground">{req.noteUser}</dd>
-                        </div>
+                        <DetailRow
+                            label="Nota dipendente"
+                            value={<span style={{ fontStyle: 'italic' }}>“{req.noteUser}”</span>}
+                        />
                     )}
                     {req.noteAdmin && (
-                        <div>
-                            <dt className="text-sm text-muted-foreground">Note admin</dt>
-                            <dd className="text-foreground">{req.noteAdmin}</dd>
-                        </div>
-                    )}
-                    {String(req.leaveType ?? '').toUpperCase() === 'MALATTIA' && req.sickCertificatePuc && (
-                        <div>
-                            <dt className="text-sm text-muted-foreground">PUC certificato</dt>
-                            <dd className="text-foreground">{req.sickCertificatePuc}</dd>
-                        </div>
+                        <DetailRow
+                            label="Nota admin"
+                            value={<span style={{ fontStyle: 'italic' }}>“{req.noteAdmin}”</span>}
+                        />
                     )}
                     {req.hasAttachment && (
-                        <div>
-                            <dt className="text-sm text-muted-foreground">Allegato</dt>
-                            <dd>
+                        <DetailRow
+                            label="Allegato"
+                            value={
                                 <a
                                     href={route('leave-request.attachment', req.id)}
-                                    className="text-sm font-medium text-primary hover:underline"
                                     target="_blank"
                                     rel="noreferrer"
+                                    style={{ fontWeight: 700, textDecoration: 'underline', textUnderlineOffset: 3 }}
                                 >
-                                    Scarica{req.attachmentName ? `: ${req.attachmentName}` : ''}
+                                    <Icon name="download" size={12} /> Scarica{req.attachmentName ? `: ${req.attachmentName}` : ''}
                                 </a>
-                            </dd>
-                        </div>
+                            }
+                        />
                     )}
-                </dl>
+                </div>
 
-                {canEmployeeCancel && (
-                    <div className="border-t border-border pt-4">
-                        <SecondaryButton
-                            type="button"
-                            onClick={() => setCancelConfirmOpen(true)}
-                            disabled={processing}
-                            className="!border-destructive !text-destructive hover:!bg-destructive/10"
-                        >
-                            Annulla richiesta
-                        </SecondaryButton>
+                {canApprove && (
+                    <div>
+                        <label htmlFor="rejectNote" className="h-label" style={{ display: 'block', marginBottom: 6 }}>
+                            Nota admin (in caso di rifiuto)
+                        </label>
+                        <textarea
+                            id="rejectNote"
+                            className="h-textarea"
+                            rows={3}
+                            value={rejectNote}
+                            onChange={(e) => setRejectNote(e.target.value)}
+                            placeholder="Es. periodo non disponibile"
+                        />
                     </div>
                 )}
 
+                <div className="h-card h-card-flat" style={{ padding: 14 }}>
+                    <div className="h-label" style={{ marginBottom: 10 }}>Cronologia</div>
+                    <ol style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'grid', gap: 10 }}>
+                        <TimelineStep done label="Richiesta inviata" when={createdLabel || '—'} />
+                        {req.status === 'APPROVED' && (
+                            <TimelineStep done label="Approvata" when={fmtIT(req.approvedAt)} />
+                        )}
+                        {req.status === 'REJECTED' && (
+                            <TimelineStep done error label="Rifiutata" when={fmtIT(req.approvedAt)} />
+                        )}
+                        {req.status === 'CANCELLED' && (
+                            <TimelineStep done error label="Annullata" when="—" />
+                        )}
+                        {req.status === 'PENDING' && (
+                            <TimelineStep pending label="In attesa di approvazione" when="—" />
+                        )}
+                    </ol>
+                </div>
+
                 {!isEmployee && (
-                    <>
-                        {canApprove && (
-                            <>
-                                <div>
-                                    <label htmlFor="rejectNote" className="block text-sm font-medium text-muted-foreground mb-1">
-                                        Motivo rifiuto (opzionale)
-                                    </label>
-                                    <Textarea
-                                        id="rejectNote"
-                                        value={rejectNote}
-                                        onChange={(e) => setRejectNote(e.target.value)}
-                                        placeholder="Es. periodo non disponibile"
-                                        rows={2}
-                                    />
-                                </div>
-                                <div className="flex gap-3 pt-2">
-                                    <PrimaryButton
-                                        onClick={handleApprove}
-                                        disabled={processing}
-                                        className="!bg-emerald-600 hover:!bg-emerald-500"
-                                    >
-                                        Approva
-                                    </PrimaryButton>
-                                    <SecondaryButton
-                                        onClick={handleReject}
-                                        disabled={processing}
-                                        className="!border-destructive !text-destructive hover:!bg-destructive/10"
-                                    >
-                                        Rifiuta
-                                    </SecondaryButton>
-                                </div>
-                            </>
-                        )}
-
-                        {canRevoke && (
-                            <div className="border-t border-border pt-4">
-                                <p className="mb-3 text-xs text-muted-foreground">
-                                    La revoca riporta la richiesta in stato "In attesa" per una nuova valutazione.
-                                </p>
-                                <button
-                                    type="button"
-                                    onClick={() => setRevokeConfirmOpen(true)}
-                                    disabled={processing}
-                                    className="inline-flex items-center rounded-md border border-amber-500 px-3 py-1.5 text-sm font-medium text-amber-600 hover:bg-amber-500/10 disabled:opacity-50 dark:text-amber-400"
-                                >
-                                    Revoca approvazione
-                                </button>
-                            </div>
-                        )}
-
-                        <div className="border-t border-border pt-4">
-                            <button
-                                type="button"
-                                onClick={() => setDeleteConfirmOpen(true)}
-                                disabled={processing}
-                                className="inline-flex items-center rounded-md border border-destructive px-3 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
-                            >
-                                Elimina richiesta
-                            </button>
+                    <div
+                        className="h-card h-card-flat"
+                        style={{ padding: 14, background: 'var(--h-rose)' }}
+                    >
+                        <div className="h-heading" style={{ fontSize: 14 }}>Azioni distruttive</div>
+                        <div style={{ fontSize: 12, marginTop: 4 }}>
+                            L'eliminazione è definitiva. La revoca riporta la richiesta in "In attesa".
                         </div>
-                    </>
+                        <Button
+                            type="button"
+                            onClick={() => setDeleteConfirmOpen(true)}
+                            disabled={processing}
+                            style={{ marginTop: 12, background: 'var(--h-ink)', color: 'var(--h-bg)' }}
+                        >
+                            <Icon name="x" size={14} />
+                            Elimina richiesta
+                        </Button>
+                    </div>
                 )}
             </div>
 

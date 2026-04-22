@@ -1,18 +1,13 @@
-import {
-    Dialog,
-    DialogPanel,
-    Transition,
-    TransitionChild,
-} from '@headlessui/react';
+import Icon from '@/Components/h/Icon';
+import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 
-const sizeClasses = {
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    '2xl': 'max-w-2xl',
-    '3xl': 'max-w-3xl',
-    /** Slideover stretto (es. calendario + form richiesta) */
-    request: 'max-w-[min(calc(100vw-2.5rem),21.5rem)]',
+const widthBySize = {
+    md: 520,
+    lg: 620,
+    xl: 720,
+    '2xl': 820,
+    '3xl': 920,
+    request: 460,
 };
 
 export default function Slideover({
@@ -21,58 +16,103 @@ export default function Slideover({
     onClose = () => {},
     title = '',
     size = 'md',
+    footer,
 }) {
+    const panelWidth = widthBySize[size] ?? widthBySize.md;
+
     return (
         <Transition show={show}>
             <Dialog as="div" className="relative z-50" onClose={onClose}>
                 <TransitionChild
-                    enter="ease-out duration-300"
+                    enter="ease-out duration-200"
                     enterFrom="opacity-0"
                     enterTo="opacity-100"
-                    leave="ease-in duration-200"
+                    leave="ease-in duration-150"
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="fixed inset-0 bg-black/50" />
+                    <div
+                        className="fixed inset-0"
+                        style={{ background: 'rgba(10,10,10,0.35)' }}
+                    />
                 </TransitionChild>
 
                 <div className="fixed inset-0 overflow-hidden">
-                    <div className="absolute inset-0 overflow-hidden">
-                        <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
-                            <TransitionChild
-                                enter="transform transition ease-in-out duration-300"
-                                enterFrom="translate-x-full"
-                                enterTo="translate-x-0"
-                                leave="transform transition ease-in-out duration-200"
-                                leaveFrom="translate-x-0"
-                                leaveTo="translate-x-full"
+                    <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full">
+                        <TransitionChild
+                            enter="transform transition ease-out duration-220"
+                            enterFrom="translate-x-full"
+                            enterTo="translate-x-0"
+                            leave="transform transition ease-in duration-180"
+                            leaveFrom="translate-x-0"
+                            leaveTo="translate-x-full"
+                        >
+                            <DialogPanel
+                                className="pointer-events-auto h-full"
+                                style={{
+                                    width: `min(${panelWidth}px, 96vw)`,
+                                    background: 'var(--h-surface)',
+                                    borderLeft: '4px solid var(--h-line)',
+                                    boxShadow: '-10px 0 0 0 var(--h-ink)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                }}
                             >
-                                <DialogPanel className={`pointer-events-auto w-screen min-w-0 ${sizeClasses[size] || sizeClasses.md}`}>
-                                    <div className="flex h-full flex-col bg-card shadow-xl">
-                                        {title && (
-                                            <div className="flex items-center justify-between border-b border-border px-6 py-4">
-                                                <h2 className="text-lg font-semibold text-foreground">
-                                                    {title}
-                                                </h2>
-                                                <button
-                                                    type="button"
-                                                    onClick={onClose}
-                                                    className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-                                                    aria-label="Chiudi"
-                                                >
-                                                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        )}
-                                        <div className="flex-1 overflow-y-auto px-6 py-4">
-                                            {children}
-                                        </div>
-                                    </div>
-                                </DialogPanel>
-                            </TransitionChild>
-                        </div>
+                                {title && (
+                                    <header
+                                        style={{
+                                            padding: '18px 22px',
+                                            borderBottom: '3px solid var(--h-line)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            gap: 12,
+                                            background: 'var(--h-surface)',
+                                        }}
+                                    >
+                                        <h3 className="h-heading" style={{ margin: 0, fontSize: 22 }}>
+                                            {title}
+                                        </h3>
+                                        <button
+                                            type="button"
+                                            onClick={onClose}
+                                            className="h-btn h-btn-sm"
+                                            aria-label="Chiudi"
+                                            style={{ padding: 6 }}
+                                        >
+                                            <Icon name="x" size={16} />
+                                        </button>
+                                    </header>
+                                )}
+                                <div
+                                    className="h-scroll"
+                                    style={{
+                                        flex: 1,
+                                        overflowY: 'auto',
+                                        padding: '20px 22px',
+                                        background: 'var(--h-surface)',
+                                    }}
+                                >
+                                    {children}
+                                </div>
+                                {footer && (
+                                    <footer
+                                        style={{
+                                            padding: '16px 22px',
+                                            borderTop: '3px solid var(--h-line)',
+                                            display: 'flex',
+                                            gap: 10,
+                                            justifyContent: 'flex-end',
+                                            alignItems: 'center',
+                                            background: 'var(--h-bg-2)',
+                                            flexWrap: 'wrap',
+                                        }}
+                                    >
+                                        {footer}
+                                    </footer>
+                                )}
+                            </DialogPanel>
+                        </TransitionChild>
                     </div>
                 </div>
             </Dialog>
