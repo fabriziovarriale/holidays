@@ -3,8 +3,9 @@ import Button from '@/Components/h/Button';
 import Icon from '@/Components/h/Icon';
 import Select from '@/Components/h/Select';
 import StatCard from '@/Components/h/StatCard';
+import ExportCsvSlideover from '@/Components/ExportCsvSlideover';
 import { Head, router } from '@inertiajs/react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 function LegendDot({ label, color }) {
     return (
@@ -38,6 +39,7 @@ function fmtActivityDate(value) {
 }
 
 export default function ReportsPage({ year, stats, monthly, roleBreakdown, activity = [] }) {
+    const [exportOpen, setExportOpen] = useState(false);
     const maxMonthly = useMemo(
         () => Math.max(1, ...monthly.map((m) => m.ferie + m.malattia)),
         [monthly]
@@ -81,10 +83,11 @@ export default function ReportsPage({ year, stats, monthly, roleBreakdown, activ
                             />
                         </label>
                         <Button
-                            as="a"
-                            href={route('admin.reports.export-leaves', { year })}
+                            type="button"
+                            variant="primary"
+                            onClick={() => setExportOpen(true)}
                         >
-                            <Icon name="download" size={14} /> CSV {year}
+                            <Icon name="download" size={14} /> Esporta CSV
                         </Button>
                     </div>
                 </div>
@@ -264,14 +267,6 @@ export default function ReportsPage({ year, stats, monthly, roleBreakdown, activ
                             </div>
                         )}
 
-                        <div style={{ marginTop: 22, display: 'grid', gap: 10 }}>
-                            <Button
-                                as="a"
-                                href={route('admin.reports.export-leaves', { year })}
-                            >
-                                <Icon name="download" size={14} /> Esporta CSV {year}
-                            </Button>
-                        </div>
                     </section>
                 </div>
 
@@ -306,6 +301,12 @@ export default function ReportsPage({ year, stats, monthly, roleBreakdown, activ
                     </div>
                 </section>
             </div>
+
+            <ExportCsvSlideover
+                show={exportOpen}
+                onClose={() => setExportOpen(false)}
+                defaultYear={year}
+            />
         </AuthenticatedLayout>
     );
 }

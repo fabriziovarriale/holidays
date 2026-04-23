@@ -82,17 +82,6 @@ export default function RequestsPage({ isAdmin, requests, leaveTypes, filters })
                             Richieste.
                         </h1>
                     </div>
-                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                        {isAdmin && (
-                            <Button
-                                as="a"
-                                href={route('admin.reports.export-leaves', { year: new Date().getFullYear() })}
-                                size="sm"
-                            >
-                                <Icon name="download" size={12} /> CSV
-                            </Button>
-                        )}
-                    </div>
                 </div>
             }
         >

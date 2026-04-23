@@ -54,14 +54,6 @@ export default function Dashboard({
             </h1>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            {isAdmin && (
-              <a
-                href={route('admin.reports.export-leaves', { year: Number(year || new Date().getFullYear()) })}
-                className="h-btn h-btn-sm"
-              >
-                <Icon name="download" size={16} /> Esporta CSV
-              </a>
-            )}
             <Button variant="primary" onClick={() => setCreateOpen(true)}>
               <Icon name="plus" size={16} /> Nuova richiesta
             </Button>
