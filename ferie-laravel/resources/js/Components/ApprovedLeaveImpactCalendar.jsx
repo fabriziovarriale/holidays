@@ -185,6 +185,7 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
         const isWeekend = dow === 0 || dow === 6;
         const isHoliday = holidaySetRef.current.has(key);
         const isNonWorking = isWeekend || isHoliday;
+        const isToday = format(new Date(), 'yyyy-MM-dd') === key;
 
         const cellBg = has && !isNonWorking
             ? 'var(--h-mint)'
@@ -194,6 +195,11 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
 
         const hatchStyle = isNonWorking ? {
             backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(10,10,10,0.10) 5px, rgba(10,10,10,0.10) 10px)',
+        } : {};
+
+        const todayStyle = isToday ? {
+            border: '3px solid var(--h-coral)',
+            boxShadow: 'var(--h-shadow-sm)',
         } : {};
 
         return (
@@ -213,9 +219,33 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
                         borderRadius: 'var(--h-radius)',
                         background: cellBg,
                         color: 'var(--h-ink)',
+                        position: 'relative',
                         ...hatchStyle,
+                        ...todayStyle,
                     }}
                 >
+                    {isToday && (
+                        <span
+                            style={{
+                                position: 'absolute',
+                                top: 4,
+                                right: 4,
+                                background: 'var(--h-coral)',
+                                color: 'var(--h-ink)',
+                                border: '2px solid var(--h-line)',
+                                borderRadius: 999,
+                                padding: '1px 8px',
+                                fontSize: 9,
+                                fontWeight: 800,
+                                fontFamily: 'var(--h-mono)',
+                                letterSpacing: '0.08em',
+                                textTransform: 'uppercase',
+                                lineHeight: 1.4,
+                            }}
+                        >
+                            Oggi
+                        </span>
+                    )}
                     <div style={{ display: 'flex', justifyContent: 'flex-start', flexShrink: 0 }}>{children}</div>
                     {has && (
                         <div
@@ -377,6 +407,17 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
                                 }}
                             />
                             Weekend / festività
+                        </span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                            <span
+                                style={{
+                                    width: 14,
+                                    height: 14,
+                                    border: '3px solid var(--h-coral)',
+                                    background: 'var(--h-surface)',
+                                }}
+                            />
+                            Oggi
                         </span>
                     </div>
 
