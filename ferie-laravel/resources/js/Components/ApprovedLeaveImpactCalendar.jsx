@@ -224,28 +224,6 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
                         ...todayStyle,
                     }}
                 >
-                    {isToday && (
-                        <span
-                            style={{
-                                position: 'absolute',
-                                top: 4,
-                                right: 4,
-                                background: 'var(--h-coral)',
-                                color: 'var(--h-ink)',
-                                border: '2px solid var(--h-line)',
-                                borderRadius: 999,
-                                padding: '1px 8px',
-                                fontSize: 9,
-                                fontWeight: 800,
-                                fontFamily: 'var(--h-mono)',
-                                letterSpacing: '0.08em',
-                                textTransform: 'uppercase',
-                                lineHeight: 1.4,
-                            }}
-                        >
-                            Oggi
-                        </span>
-                    )}
                     <div style={{ display: 'flex', justifyContent: 'flex-start', flexShrink: 0 }}>{children}</div>
                     {has && (
                         <div
