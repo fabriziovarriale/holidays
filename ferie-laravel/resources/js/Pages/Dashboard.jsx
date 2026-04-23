@@ -140,7 +140,7 @@ function EmployeeView({ balance, requests, holidays }) {
   };
 
   return (
-    <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1.2fr 1fr' }}>
+    <div className="h-grid-responsive" style={{ display: 'grid', gap: 18, gridTemplateColumns: '1.2fr 1fr' }}>
       {/* Balance card */}
       <section className="h-card" style={{ padding: 22 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -349,7 +349,7 @@ function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRe
   return (
     <div style={{ display: 'grid', gap: 18 }}>
       {/* StatCards */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
         <StatCard label="IN ATTESA"     value={pendingRequests.length} tone="yellow" />
         <StatCard label="OGGI IN UFFICIO" value={`${Math.max(0, employeesCount - outToday)}/${employeesCount}`} tone="mint" />
         <StatCard label="APPROVATE ANNO" value={approved} />

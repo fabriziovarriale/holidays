@@ -283,6 +283,81 @@
   opacity: 0.6;
 }
 
+/* ————————————————————————————————————————————————————
+   Mobile bottom navigation + responsive helpers
+   ———————————————————————————————————————————————————— */
+.h-mobile-nav { display: none; }
+.h-desktop-only { display: initial; }
+.h-mobile-only { display: none; }
+
+@media (max-width: 768px) {
+  /* Layout shell */
+  .h-app-shell { grid-template-columns: 1fr !important; }
+  .h-sidebar-desktop { display: none !important; }
+  .h-main { padding: 18px !important; padding-bottom: 80px !important; }
+  .h-main-header { padding: 16px 18px !important; }
+  .h-main-header .h-display { font-size: 28px !important; }
+
+  /* Stack 2-/3-column grids on mobile. Pages opt in by adding
+     `h-grid-responsive` alongside their gridTemplateColumns. */
+  .h-grid-responsive { grid-template-columns: 1fr !important; }
+
+  /* Visibility helpers */
+  .h-desktop-only { display: none !important; }
+  .h-mobile-only { display: initial !important; }
+
+  /* Bottom nav bar */
+  .h-mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: var(--h-surface);
+    border-top: 3px solid var(--h-line);
+    box-shadow: 0 -4px 0 0 var(--h-ink);
+    z-index: 40;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .h-mobile-nav-item {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: var(--h-muted);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 8px 4px 10px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  .h-mobile-nav-item.active {
+    color: var(--h-ink);
+  }
+  .h-mobile-nav-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: 6px;
+    width: 28px;
+    height: 3px;
+    background: var(--h-coral);
+    border-radius: 2px;
+  }
+
+  /* Table defaults */
+  .h-table thead th { padding: 8px 8px; }
+  .h-table tbody td { padding: 10px 8px; }
+
+  /* Auth/Guest layouts compact */
+  .h-card-lg { box-shadow: var(--h-shadow); }
+}
+
 /* Marquee scroller decoration */
 .h-marquee {
   display: flex; gap: 32px;

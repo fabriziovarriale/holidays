@@ -39,6 +39,7 @@ function initialsOf(fullName) {
 function DetailRow({ label, value }) {
     return (
         <div
+            className="h-grid-responsive"
             style={{
                 display: 'grid',
                 gridTemplateColumns: '140px 1fr',

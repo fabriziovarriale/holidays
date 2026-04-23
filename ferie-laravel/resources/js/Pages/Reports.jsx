@@ -165,7 +165,7 @@ export default function ReportsPage({ year, stats, monthly, roleBreakdown, activ
                     )}
                 </section>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 18 }}>
+                <div className="h-grid-responsive" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 18 }}>
                     <section className="h-card" style={{ padding: 22 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                             <h3 className="h-heading" style={{ fontSize: 18 }}>Distribuzione assenze {year}</h3>

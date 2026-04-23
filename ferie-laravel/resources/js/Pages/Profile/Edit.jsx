@@ -45,6 +45,7 @@ export default function Edit({ mustVerifyEmail, status }) {
             <Head title="Profilo · Holidays" />
 
             <div
+                className="h-grid-responsive"
                 style={{
                     display: 'grid',
                     gridTemplateColumns: 'minmax(260px, 1fr) minmax(0, 2fr)',

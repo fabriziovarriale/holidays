@@ -16,6 +16,11 @@ const NAV_ADMIN = [
   { key: 'profile.edit',        label: 'Profilo',    icon: 'user',   routeName: 'profile.edit' },
 ];
 
+// Mobile bottom nav: keep the most-used pages only (cap at 5 tab slots).
+// Admin loses "Report" on mobile — still reachable from desktop sidebar.
+const MOBILE_NAV_ADMIN = NAV_ADMIN.filter((n) => n.key !== 'admin.reports.index');
+const MOBILE_NAV_USER = NAV_USER;
+
 function formatRole(user) {
   if (!user) return '';
   const base = user.role === 'admin' ? 'Amministratore' : 'Dipendente';
@@ -26,6 +31,7 @@ export default function AuthenticatedLayout({ header, children }) {
   const { auth, impersonation } = usePage().props;
   const user = auth?.user;
   const nav = user?.role === 'admin' ? NAV_ADMIN : NAV_USER;
+  const mobileNav = user?.role === 'admin' ? MOBILE_NAV_ADMIN : MOBILE_NAV_USER;
 
   const activeKey = (() => {
     try {
@@ -40,9 +46,13 @@ export default function AuthenticatedLayout({ header, children }) {
     : '—';
 
   return (
-    <div className="h-root" style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: '240px 1fr' }}>
-      {/* SIDEBAR */}
+    <div
+      className="h-root h-app-shell"
+      style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: '240px 1fr' }}
+    >
+      {/* SIDEBAR — desktop only */}
       <aside
+        className="h-sidebar-desktop"
         style={{
           borderRight: 'var(--h-bw) solid var(--h-line)',
           background: 'var(--h-surface)',
@@ -142,8 +152,59 @@ export default function AuthenticatedLayout({ header, children }) {
 
       {/* MAIN */}
       <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        {/* Mobile top bar — logo + impersonation + logout */}
+        <header
+          className="h-mobile-only"
+          style={{
+            borderBottom: 'var(--h-bw) solid var(--h-line)',
+            background: 'var(--h-surface)',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            position: 'sticky',
+            top: 0,
+            zIndex: 30,
+          }}
+        >
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 6,
+              background: 'var(--h-coral)',
+              border: '2px solid var(--h-line)',
+              display: 'grid', placeItems: 'center',
+              fontFamily: 'var(--h-display)', fontSize: 18, color: 'var(--h-ink)',
+            }}>U</div>
+            <div className="h-display" style={{ fontSize: 16, lineHeight: 1 }}>Holidays</div>
+          </Link>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+            {impersonation?.active && (
+              <Link
+                href={route('impersonation.stop')}
+                method="post"
+                as="button"
+                className="h-btn h-btn-sm"
+                style={{ background: 'var(--h-yellow)' }}
+              >
+                Torna admin
+              </Link>
+            )}
+            <Link
+              href={route('logout')}
+              method="post"
+              as="button"
+              className="h-btn h-btn-sm h-btn-ghost"
+              aria-label="Esci"
+              style={{ padding: 8 }}
+            >
+              <Icon name="logout" size={16} />
+            </Link>
+          </div>
+        </header>
+
         {header && (
           <header
+            className="h-main-header"
             style={{
               borderBottom: 'var(--h-bw) solid var(--h-line)',
               background: 'var(--h-bg)',
@@ -153,10 +214,27 @@ export default function AuthenticatedLayout({ header, children }) {
             {header}
           </header>
         )}
-        <main style={{ padding: 28, background: 'var(--h-bg)', flex: 1 }}>
+        <main className="h-main" style={{ padding: 28, background: 'var(--h-bg)', flex: 1 }}>
           {children}
         </main>
       </div>
+
+      {/* Bottom nav — mobile only */}
+      <nav className="h-mobile-nav" aria-label="Navigazione principale">
+        {mobileNav.map((item) => {
+          const isActive = activeKey === item.key;
+          return (
+            <Link
+              key={item.key}
+              href={route(item.routeName)}
+              className={`h-mobile-nav-item${isActive ? ' active' : ''}`}
+            >
+              <Icon name={item.icon} size={22} />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }
