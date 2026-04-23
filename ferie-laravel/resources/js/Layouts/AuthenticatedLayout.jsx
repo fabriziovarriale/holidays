@@ -1,5 +1,7 @@
 import { Link, usePage, router } from '@inertiajs/react';
 import Icon from '@/Components/h/Icon';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 const NAV_USER = [
   { key: 'dashboard',      label: 'Dashboard',  icon: 'home', routeName: 'dashboard' },
@@ -32,6 +34,9 @@ export default function AuthenticatedLayout({ header, children }) {
   const user = auth?.user;
   const nav = user?.role === 'admin' ? NAV_ADMIN : NAV_USER;
   const mobileNav = user?.role === 'admin' ? MOBILE_NAV_ADMIN : MOBILE_NAV_USER;
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const activeKey = (() => {
     try {
@@ -252,22 +257,37 @@ export default function AuthenticatedLayout({ header, children }) {
         </main>
       </div>
 
-      {/* Bottom nav — mobile only */}
-      <nav className="h-mobile-nav" aria-label="Navigazione principale">
-        {mobileNav.map((item) => {
-          const isActive = activeKey === item.key;
-          return (
-            <Link
-              key={item.key}
-              href={route(item.routeName)}
-              className={`h-mobile-nav-item${isActive ? ' active' : ''}`}
-            >
-              <Icon name={item.icon} size={22} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Bottom nav — mobile only, portalato in <body> per evitare
+          stacking context / transform degli ancestor */}
+      {mounted && createPortal(
+        <nav
+          className="h-mobile-nav"
+          aria-label="Navigazione principale"
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            width: '100%',
+            zIndex: 45,
+          }}
+        >
+          {mobileNav.map((item) => {
+            const isActive = activeKey === item.key;
+            return (
+              <Link
+                key={item.key}
+                href={route(item.routeName)}
+                className={`h-mobile-nav-item${isActive ? ' active' : ''}`}
+              >
+                <Icon name={item.icon} size={22} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>,
+        document.body
+      )}
     </div>
   );
 }
