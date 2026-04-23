@@ -386,17 +386,6 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
                             />
                             Weekend / festività
                         </span>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
-                            <span
-                                style={{
-                                    width: 14,
-                                    height: 14,
-                                    border: '3px solid var(--h-coral)',
-                                    background: 'var(--h-surface)',
-                                }}
-                            />
-                            Oggi
-                        </span>
                     </div>
 
                     <div style={{ width: '100%', minWidth: 0, overflowX: 'auto', color: 'var(--h-ink)' }}>
