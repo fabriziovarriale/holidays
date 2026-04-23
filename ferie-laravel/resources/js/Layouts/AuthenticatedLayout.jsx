@@ -158,35 +158,68 @@ export default function AuthenticatedLayout({ header, children }) {
           style={{
             borderBottom: 'var(--h-bw) solid var(--h-line)',
             background: 'var(--h-surface)',
-            padding: '12px 16px',
+            padding: '10px 14px',
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
+            gap: 8,
+            flexWrap: 'nowrap',
             position: 'sticky',
             top: 0,
             zIndex: 30,
           }}
         >
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
+          <Link
+            href="/"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              textDecoration: 'none',
+              color: 'inherit',
+              minWidth: 0,
+              flex: '0 1 auto',
+            }}
+          >
             <div style={{
-              width: 32, height: 32, borderRadius: 6,
+              width: 30, height: 30, borderRadius: 6,
               background: 'var(--h-coral)',
               border: '2px solid var(--h-line)',
               display: 'grid', placeItems: 'center',
-              fontFamily: 'var(--h-display)', fontSize: 18, color: 'var(--h-ink)',
+              fontFamily: 'var(--h-display)', fontSize: 16, color: 'var(--h-ink)',
+              flexShrink: 0,
             }}>U</div>
-            <div className="h-display" style={{ fontSize: 16, lineHeight: 1 }}>Holidays</div>
+            <div
+              className="h-display"
+              style={{
+                fontSize: 15,
+                lineHeight: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Holidays
+            </div>
           </Link>
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div
+            style={{
+              marginLeft: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              flexShrink: 0,
+            }}
+          >
             {impersonation?.active && (
               <Link
                 href={route('impersonation.stop')}
                 method="post"
                 as="button"
                 className="h-btn h-btn-sm"
-                style={{ background: 'var(--h-yellow)' }}
+                aria-label="Torna admin"
+                style={{ background: 'var(--h-yellow)', padding: 8 }}
               >
-                Torna admin
+                <Icon name="arrowL" size={14} />
               </Link>
             )}
             <Link
@@ -195,7 +228,7 @@ export default function AuthenticatedLayout({ header, children }) {
               as="button"
               className="h-btn h-btn-sm h-btn-ghost"
               aria-label="Esci"
-              style={{ padding: 8 }}
+              style={{ padding: 8, flexShrink: 0 }}
             >
               <Icon name="logout" size={16} />
             </Link>
