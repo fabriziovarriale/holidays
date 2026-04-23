@@ -287,8 +287,8 @@
    Mobile bottom navigation + responsive helpers
    ———————————————————————————————————————————————————— */
 .h-mobile-nav { display: none; }
-.h-desktop-only { display: initial; }
-.h-mobile-only { display: none; }
+.h-desktop-only { /* visible by default on desktop */ }
+.h-mobile-only { display: none !important; }
 
 @media (max-width: 768px) {
   /* Layout shell */
@@ -302,9 +302,9 @@
      `h-grid-responsive` alongside their gridTemplateColumns. */
   .h-grid-responsive { grid-template-columns: 1fr !important; }
 
-  /* Visibility helpers */
+  /* Visibility helpers — force flex so the topbar row keeps its layout */
   .h-desktop-only { display: none !important; }
-  .h-mobile-only { display: initial !important; }
+  .h-mobile-only { display: flex !important; }
 
   /* Bottom nav bar */
   .h-mobile-nav {
