@@ -91,27 +91,29 @@ export default function Select({
                             key={String(opt.value)}
                             value={opt.value}
                             disabled={opt.disabled}
-                            style={({ focus, selected: sel }) => ({
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 8,
-                                padding: '8px 10px',
-                                cursor: opt.disabled ? 'not-allowed' : 'pointer',
-                                borderRadius: 'var(--h-radius)',
-                                background: sel
-                                    ? 'var(--h-coral)'
-                                    : focus
-                                        ? 'var(--h-bg-2)'
-                                        : 'transparent',
-                                color: 'var(--h-ink)',
-                                fontSize: 13,
-                                fontWeight: sel ? 700 : 500,
-                                opacity: opt.disabled ? 0.5 : 1,
-                                outline: 'none',
-                            })}
+                            as="div"
                         >
-                            {({ selected: sel }) => (
-                                <>
+                            {({ focus, selected: sel }) => (
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 8,
+                                        padding: '8px 10px',
+                                        cursor: opt.disabled ? 'not-allowed' : 'pointer',
+                                        borderRadius: 'var(--h-radius)',
+                                        background: sel
+                                            ? 'var(--h-coral)'
+                                            : focus
+                                                ? 'var(--h-bg-2)'
+                                                : 'transparent',
+                                        color: 'var(--h-ink)',
+                                        fontSize: 13,
+                                        fontWeight: sel ? 700 : 500,
+                                        opacity: opt.disabled ? 0.5 : 1,
+                                        outline: 'none',
+                                    }}
+                                >
                                     <span
                                         style={{
                                             display: 'inline-flex',
@@ -134,7 +136,7 @@ export default function Select({
                                     >
                                         {opt.label}
                                     </span>
-                                </>
+                                </div>
                             )}
                         </ListboxOption>
                     ))}
