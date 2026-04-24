@@ -334,8 +334,6 @@ export default function RequestsPage({ isAdmin, requests, leaveTypes, filters })
                                         </div>
                                         <div className="h-mono" style={{ fontSize: 12, color: 'var(--h-muted)', marginTop: 6 }}>
                                             {fmtDate(r.startDate)} → {fmtDate(r.endDate)}
-                                            <span style={{ margin: '0 6px' }}>·</span>
-                                            inviata {fmtDate(r.createdAt)}
                                         </div>
                                         {(r.noteAdmin || r.noteUser) && (
                                             <div
