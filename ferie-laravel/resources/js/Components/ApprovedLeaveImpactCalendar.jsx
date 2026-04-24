@@ -130,6 +130,7 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
     const [typeFilter, setTypeFilter] = useState('');
     const [nameDialogOpen, setNameDialogOpen] = useState(false);
     const [typeDialogOpen, setTypeDialogOpen] = useState(false);
+    const [toolsOpen, setToolsOpen] = useState(false);
 
     const holidaySet = useMemo(() => new Set(holidays), [holidays]);
 
@@ -318,75 +319,134 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
 
     return (
         <section className="h-card" style={{ padding: 22 }}>
-            <div style={{ marginBottom: 14 }}>
-                <h3 className="h-heading" style={{ fontSize: 18 }}>Calendario assenze approvate</h3>
-                <p className="h-muted" style={{ fontSize: 13, marginTop: 4 }}>
-                    Clic su un giorno per aprire il dettaglio nel pannello laterale.
-                </p>
+            <div
+                style={{
+                    marginBottom: 14,
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    flexWrap: 'wrap',
+                }}
+            >
+                <div>
+                    <h3 className="h-heading" style={{ fontSize: 18 }}>Calendario assenze approvate</h3>
+                    <p className="h-muted" style={{ fontSize: 13, marginTop: 4 }}>
+                        Clic su un giorno per aprire il dettaglio nel pannello laterale.
+                    </p>
+                </div>
+                {approvedEntries.length > 0 && (
+                    <button
+                        type="button"
+                        onClick={() => setToolsOpen((v) => !v)}
+                        className="h-btn h-btn-sm"
+                        aria-expanded={toolsOpen}
+                        style={{
+                            background: toolsOpen ? 'var(--h-ink)' : 'var(--h-surface)',
+                            color: toolsOpen ? 'var(--h-bg)' : 'var(--h-ink)',
+                            boxShadow: toolsOpen ? 'var(--h-shadow-sm)' : 'none',
+                        }}
+                    >
+                        <Icon name="filter" size={14} />
+                        {toolsOpen ? 'Nascondi' : 'Filtri e legenda'}
+                        {(nameFilter || typeFilter) && !toolsOpen && (
+                            <span
+                                style={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    background: 'var(--h-coral)',
+                                    border: '1px solid var(--h-line)',
+                                }}
+                            />
+                        )}
+                    </button>
+                )}
             </div>
 
             {approvedEntries.length === 0 ? (
                 <p className="h-muted" style={{ fontSize: 13 }}>Nessuna richiesta approvata da mostrare.</p>
             ) : (
                 <>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
-                        <button
-                            type="button"
-                            onClick={() => setNameDialogOpen(true)}
-                            className="h-btn h-btn-sm"
+                    {toolsOpen && (
+                        <div
+                            className="h-card h-card-flat"
+                            style={{
+                                padding: 14,
+                                marginBottom: 14,
+                                background: 'var(--h-bg-2)',
+                                display: 'grid',
+                                gap: 12,
+                            }}
                         >
-                            <span className="h-muted">Dipendente:</span>
-                            <span>{nameFilter || 'Tutti'}</span>
-                            <Icon name="chevDown" size={12} />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setTypeDialogOpen(true)}
-                            className="h-btn h-btn-sm"
-                        >
-                            <span className="h-muted">Tipo assenza:</span>
-                            <span>{typeFilter || 'Tutti'}</span>
-                            <Icon name="chevDown" size={12} />
-                        </button>
-                        {(nameFilter || typeFilter) && (
-                            <button
-                                type="button"
-                                onClick={() => { setNameFilter(''); setTypeFilter(''); }}
-                                className="h-btn h-btn-sm h-btn-ghost"
-                                style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}
-                            >
-                                Azzera filtri
-                            </button>
-                        )}
-                    </div>
+                            <div>
+                                <div className="h-label" style={{ marginBottom: 6 }}>Filtri</div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setNameDialogOpen(true)}
+                                        className="h-btn h-btn-sm"
+                                        style={{ background: 'var(--h-surface)' }}
+                                    >
+                                        <span className="h-muted">Dipendente:</span>
+                                        <span>{nameFilter || 'Tutti'}</span>
+                                        <Icon name="chevDown" size={12} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setTypeDialogOpen(true)}
+                                        className="h-btn h-btn-sm"
+                                        style={{ background: 'var(--h-surface)' }}
+                                    >
+                                        <span className="h-muted">Tipo assenza:</span>
+                                        <span>{typeFilter || 'Tutti'}</span>
+                                        <Icon name="chevDown" size={12} />
+                                    </button>
+                                    {(nameFilter || typeFilter) && (
+                                        <button
+                                            type="button"
+                                            onClick={() => { setNameFilter(''); setTypeFilter(''); }}
+                                            className="h-btn h-btn-sm h-btn-ghost"
+                                            style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}
+                                        >
+                                            Azzera filtri
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
 
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 14 }}>
-                        {Object.entries(LEAVE_TYPE_TOKENS).map(([label, { bg }]) => (
-                            <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
-                                <span
-                                    style={{
-                                        width: 12,
-                                        height: 12,
-                                        borderRadius: '50%',
-                                        background: bg,
-                                        border: '2px solid var(--h-line)',
-                                    }}
-                                />
-                                {label}
-                            </span>
-                        ))}
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
-                            <span
-                                style={{
-                                    width: 14,
-                                    height: 14,
-                                    border: '2px solid var(--h-line)',
-                                    backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(10,10,10,0.3) 2px, rgba(10,10,10,0.3) 4px)',
-                                }}
-                            />
-                            Weekend / festività
-                        </span>
-                    </div>
+                            <div>
+                                <div className="h-label" style={{ marginBottom: 6 }}>Legenda</div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
+                                    {Object.entries(LEAVE_TYPE_TOKENS).map(([label, { bg }]) => (
+                                        <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                                            <span
+                                                style={{
+                                                    width: 12,
+                                                    height: 12,
+                                                    borderRadius: '50%',
+                                                    background: bg,
+                                                    border: '2px solid var(--h-line)',
+                                                }}
+                                            />
+                                            {label}
+                                        </span>
+                                    ))}
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                                        <span
+                                            style={{
+                                                width: 14,
+                                                height: 14,
+                                                border: '2px solid var(--h-line)',
+                                                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(10,10,10,0.3) 2px, rgba(10,10,10,0.3) 4px)',
+                                            }}
+                                        />
+                                        Weekend / festività
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <div style={{ width: '100%', minWidth: 0, overflowX: 'auto', color: 'var(--h-ink)' }}>
                         <DayPicker
