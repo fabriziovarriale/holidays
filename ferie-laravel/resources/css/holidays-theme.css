@@ -286,6 +286,9 @@
 /* ————————————————————————————————————————————————————
    Mobile bottom navigation + responsive helpers
    ———————————————————————————————————————————————————— */
+/* Previene qualunque overflow orizzontale accidentale */
+html, body { overflow-x: hidden; max-width: 100%; }
+
 .h-mobile-nav { display: none; }
 .h-desktop-only { /* visible by default on desktop */ }
 .h-mobile-only { display: none !important; }
@@ -356,6 +359,12 @@
   /* Table defaults */
   .h-table thead th { padding: 8px 8px; }
   .h-table tbody td { padding: 10px 8px; }
+
+  /* BalanceRing: ridotto su mobile per non far traboccare la card */
+  .h-balance-ring {
+    width: clamp(120px, 36vw, 160px) !important;
+    height: clamp(120px, 36vw, 160px) !important;
+  }
 
   /* Calendario: su mobile mostriamo solo il dischetto iniziali,
      niente card bianca, niente nome/tipo. Dots in row con wrap. */

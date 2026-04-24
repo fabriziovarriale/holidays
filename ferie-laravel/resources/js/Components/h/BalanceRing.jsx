@@ -18,7 +18,13 @@ export default function BalanceRing({ total = 26, used = 0, pending = 0, remaini
   const rotRem  = rotPend + pendPct * 360;
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className="h-balance-ring"
+      style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
+    >
       <circle cx={size/2} cy={size/2} r={r} fill="none"
               stroke="var(--h-bg-2)" strokeWidth={stroke} />
       {/* used — coral */}
