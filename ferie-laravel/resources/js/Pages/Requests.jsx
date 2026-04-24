@@ -34,9 +34,12 @@ function initialsOf(fullName) {
 export default function RequestsPage({ isAdmin, requests, leaveTypes, filters }) {
     const [selected, setSelected] = useState(null);
     const [search, setSearch] = useState(filters?.q ?? '');
+    const [filtersOpen, setFiltersOpen] = useState(false);
 
     const activeStatus = filters?.status || 'ALL';
     const activeType = filters?.type || 'ALL';
+    const hasActiveFilter =
+        activeStatus !== 'ALL' || activeType !== 'ALL' || (filters?.q ?? '').length > 0;
 
     const counts = useMemo(() => {
         const c = { ALL: requests.length, PENDING: 0, APPROVED: 0, REJECTED: 0, CANCELLED: 0 };
@@ -95,63 +98,133 @@ export default function RequestsPage({ isAdmin, requests, leaveTypes, filters })
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        flexWrap: 'wrap',
                         gap: 10,
+                        flexWrap: 'wrap',
                     }}
                 >
-                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                        {STATUSES.map((s) => {
-                            const active = activeStatus === s.key;
-                            return (
-                                <button
-                                    key={s.key}
-                                    type="button"
-                                    onClick={() => applyFilter({ status: s.key })}
-                                    className="h-btn h-btn-sm"
-                                    style={{
-                                        background: active ? 'var(--h-ink)' : 'var(--h-surface)',
-                                        color: active ? 'var(--h-bg)' : 'var(--h-ink)',
-                                        boxShadow: active ? 'var(--h-shadow-sm)' : 'none',
-                                    }}
-                                >
-                                    {s.label}
-                                    <span
-                                        className="h-mono"
-                                        style={{ marginLeft: 6, fontSize: 10, opacity: 0.7 }}
-                                    >
-                                        {counts[s.key] ?? 0}
-                                    </span>
-                                </button>
-                            );
-                        })}
+                    <div>
+                        <h3 className="h-heading" style={{ fontSize: 18 }}>
+                            {isAdmin ? 'Tutte le richieste' : 'Le tue richieste'}
+                        </h3>
+                        <p className="h-muted" style={{ fontSize: 12, marginTop: 2 }}>
+                            {requests.length} {requests.length === 1 ? 'risultato' : 'risultati'}
+                            {hasActiveFilter ? ' con filtri attivi' : ''}
+                        </p>
                     </div>
-
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <Select
-                            value={activeType}
-                            onChange={(v) => applyFilter({ type: v })}
-                            options={[
-                                { value: 'ALL', label: 'Tutti i tipi' },
-                                ...leaveTypes.map((lt) => ({ value: lt.code, label: lt.label })),
-                            ]}
-                            style={{ width: 180 }}
-                        />
-
-                        <form onSubmit={handleSearch} style={{ display: 'flex', gap: 6 }}>
-                            <input
-                                type="text"
-                                className="h-input"
-                                placeholder="Cerca persona, nota…"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                style={{ width: 220 }}
+                    <button
+                        type="button"
+                        onClick={() => setFiltersOpen((v) => !v)}
+                        className="h-btn h-btn-sm"
+                        aria-expanded={filtersOpen}
+                        style={{
+                            background: filtersOpen ? 'var(--h-ink)' : 'var(--h-surface)',
+                            color: filtersOpen ? 'var(--h-bg)' : 'var(--h-ink)',
+                            boxShadow: filtersOpen ? 'var(--h-shadow-sm)' : 'none',
+                        }}
+                    >
+                        <Icon name="filter" size={14} />
+                        {filtersOpen ? 'Nascondi filtri' : 'Filtri'}
+                        {hasActiveFilter && !filtersOpen && (
+                            <span
+                                style={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    background: 'var(--h-coral)',
+                                    border: '1px solid var(--h-line)',
+                                }}
                             />
-                            <Button type="submit" size="sm">
-                                <Icon name="search" size={12} />
-                            </Button>
-                        </form>
-                    </div>
+                        )}
+                    </button>
                 </div>
+
+                {filtersOpen && (
+                    <div
+                        style={{
+                            padding: '14px 20px',
+                            borderBottom: 'var(--h-bw) solid var(--h-line)',
+                            background: 'var(--h-bg-2)',
+                            display: 'grid',
+                            gap: 14,
+                        }}
+                    >
+                        <div>
+                            <div className="h-label" style={{ marginBottom: 6 }}>Stato</div>
+                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                {STATUSES.map((s) => {
+                                    const active = activeStatus === s.key;
+                                    return (
+                                        <button
+                                            key={s.key}
+                                            type="button"
+                                            onClick={() => applyFilter({ status: s.key })}
+                                            className="h-btn h-btn-sm"
+                                            style={{
+                                                background: active ? 'var(--h-ink)' : 'var(--h-surface)',
+                                                color: active ? 'var(--h-bg)' : 'var(--h-ink)',
+                                                boxShadow: active ? 'var(--h-shadow-sm)' : 'none',
+                                            }}
+                                        >
+                                            {s.label}
+                                            <span
+                                                className="h-mono"
+                                                style={{ marginLeft: 6, fontSize: 10, opacity: 0.7 }}
+                                            >
+                                                {counts[s.key] ?? 0}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div className="h-label" style={{ marginBottom: 6 }}>Tipo</div>
+                            <Select
+                                value={activeType}
+                                onChange={(v) => applyFilter({ type: v })}
+                                options={[
+                                    { value: 'ALL', label: 'Tutti i tipi' },
+                                    ...leaveTypes.map((lt) => ({ value: lt.code, label: lt.label })),
+                                ]}
+                                style={{ maxWidth: 240 }}
+                            />
+                        </div>
+
+                        <div>
+                            <div className="h-label" style={{ marginBottom: 6 }}>Ricerca</div>
+                            <form onSubmit={handleSearch} style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                <input
+                                    type="text"
+                                    className="h-input"
+                                    placeholder="Cerca persona, nota…"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    style={{ flex: 1, minWidth: 200 }}
+                                />
+                                <Button type="submit" size="sm">
+                                    <Icon name="search" size={12} /> Cerca
+                                </Button>
+                            </form>
+                        </div>
+
+                        {hasActiveFilter && (
+                            <div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearch('');
+                                        applyFilter({ status: 'ALL', type: 'ALL', q: '' });
+                                    }}
+                                    className="h-btn h-btn-sm h-btn-ghost"
+                                    style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}
+                                >
+                                    Azzera filtri
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {requests.length === 0 ? (
                     <div style={{ padding: 40, textAlign: 'center', color: 'var(--h-muted)' }}>
