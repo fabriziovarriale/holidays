@@ -222,9 +222,18 @@ export default function AuthenticatedLayout({ header, children }) {
                 as="button"
                 className="h-btn h-btn-sm"
                 aria-label="Torna admin"
-                style={{ background: 'var(--h-yellow)', padding: 8 }}
+                style={{
+                  background: 'var(--h-yellow)',
+                  padding: '6px 10px 6px 8px',
+                  height: 34,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  lineHeight: 1,
+                }}
               >
-                <Icon name="arrowL" size={14} />
+                <Icon name="user" size={14} />
+                <span style={{ fontSize: 12 }}>Admin</span>
               </Link>
             )}
             <Link
@@ -233,7 +242,14 @@ export default function AuthenticatedLayout({ header, children }) {
               as="button"
               className="h-btn h-btn-sm h-btn-ghost"
               aria-label="Esci"
-              style={{ padding: 8, flexShrink: 0 }}
+              style={{
+                padding: '6px 10px',
+                height: 34,
+                display: 'inline-flex',
+                alignItems: 'center',
+                flexShrink: 0,
+                lineHeight: 1,
+              }}
             >
               <Icon name="logout" size={16} />
             </Link>
