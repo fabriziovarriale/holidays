@@ -399,7 +399,10 @@ function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRe
                     )}
                   </div>
                   <div className="h-mono" style={{ fontSize: 12, color: 'var(--h-muted)' }}>
-                    {fmtDate(r.startDate)} → {fmtDate(r.endDate)} · {r.duration || `${r.days || '?'}g`}
+                    {fmtDate(r.startDate)} → {fmtDate(r.endDate)}
+                    {' · '}
+                    {r.requestedUnits}
+                    {r.leaveType === 'PERMESSO' ? 'h' : 'g'}
                   </div>
                   {r.noteUser && (
                     <div style={{ fontSize: 13, fontStyle: 'italic', marginTop: 4, color: 'var(--h-muted)' }}>
