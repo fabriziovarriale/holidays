@@ -372,75 +372,41 @@ function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRe
               <div
                 key={r.id}
                 onClick={() => setDetail(r)}
-                className="h-queue-row"
                 style={{
+                  display: 'flex',
+                  gap: 12,
+                  alignItems: 'center',
                   padding: '14px 18px',
                   borderBottom: '2px solid var(--h-ink)',
                   cursor: 'pointer',
                 }}
               >
-                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <span className="h-avatar" style={{ flexShrink: 0 }}>
-                    {initialsOf(r.userFullName)}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, marginBottom: 4, wordBreak: 'break-word' }}>
-                      {r.userFullName}
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      {r.jobRole && <span className="h-chip">{r.jobRole}</span>}
-                      <LeaveTypeTag code={r.leaveType} />
-                      {r.roleConflictWarning && (
-                        <span className="h-chip" style={{ background: 'var(--h-rose)', borderColor: 'var(--h-line)' }}>
-                          <Icon name="warning" size={12} /> Conflitto
-                        </span>
-                      )}
-                    </div>
-                    <div className="h-mono" style={{ fontSize: 12, color: 'var(--h-muted)' }}>
-                      {r.startDate} → {r.endDate} · {r.duration || `${r.days || '?'}g`}
-                    </div>
-                    {r.noteUser && (
-                      <div style={{ fontSize: 13, fontStyle: 'italic', marginTop: 4, color: 'var(--h-muted)' }}>
-                        "{r.noteUser}"
-                      </div>
+                <span className="h-avatar" style={{ flexShrink: 0 }}>
+                  {initialsOf(r.userFullName)}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, marginBottom: 4, wordBreak: 'break-word' }}>
+                    {r.userFullName}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    {r.jobRole && <span className="h-chip">{r.jobRole}</span>}
+                    <LeaveTypeTag code={r.leaveType} />
+                    {r.roleConflictWarning && (
+                      <span className="h-chip" style={{ background: 'var(--h-rose)', borderColor: 'var(--h-line)' }}>
+                        <Icon name="warning" size={12} /> Conflitto
+                      </span>
                     )}
                   </div>
+                  <div className="h-mono" style={{ fontSize: 12, color: 'var(--h-muted)' }}>
+                    {r.startDate} → {r.endDate} · {r.duration || `${r.days || '?'}g`}
+                  </div>
+                  {r.noteUser && (
+                    <div style={{ fontSize: 13, fontStyle: 'italic', marginTop: 4, color: 'var(--h-muted)' }}>
+                      "{r.noteUser}"
+                    </div>
+                  )}
                 </div>
-
-                <div
-                  className="h-queue-actions"
-                  style={{
-                    display: 'flex',
-                    gap: 8,
-                    marginTop: 10,
-                    justifyContent: 'flex-end',
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm(`Rifiutare la richiesta di ${r.userFullName}?`)) {
-                        router.patch(route('admin.requests.reject', r.id), { note_admin: '' }, { preserveScroll: true });
-                      }
-                    }}
-                    className="h-btn h-btn-sm"
-                    style={{ background: 'var(--h-rose)', flex: '0 1 auto' }}
-                  >
-                    Rifiuta
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.patch(route('admin.requests.approve', r.id), {}, { preserveScroll: true });
-                    }}
-                    className="h-btn h-btn-sm h-btn-primary"
-                    style={{ flex: '0 1 auto' }}
-                  >
-                    Approva
-                  </button>
-                </div>
+                <Icon name="chevR" size={16} />
               </div>
             ))}
           </div>
