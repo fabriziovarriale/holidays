@@ -245,31 +245,41 @@ export default function RequestDetailSlideover({ request: req, show, onClose, va
 
                 <div
                     className="h-card h-card-flat"
-                    style={{ padding: 18, background: 'var(--h-bg-2)' }}
+                    style={{ padding: 14, background: 'var(--h-bg-2)' }}
                 >
                     <div
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(3, 1fr)',
-                            gap: 16,
+                            gridTemplateColumns: '1.6fr 1fr 1fr',
+                            gap: 12,
                             alignItems: 'center',
                         }}
                     >
-                        <div>
+                        <div style={{ minWidth: 0 }}>
                             <div className="h-mono h-muted" style={{ fontSize: 10, letterSpacing: '0.08em' }}>PERIODO</div>
-                            <div className="h-display" style={{ fontSize: 18, marginTop: 4 }}>
+                            <div
+                                className="h-display"
+                                style={{
+                                    fontSize: 15,
+                                    marginTop: 4,
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                }}
+                                title={`${fmtITShort(req.startDate)} — ${fmtITShort(req.endDate)}`}
+                            >
                                 {fmtITShort(req.startDate)}
-                                <span style={{ margin: '0 6px' }}>—</span>
+                                <span style={{ margin: '0 4px' }}>—</span>
                                 {fmtITShort(req.endDate)}
                             </div>
                         </div>
-                        <div>
+                        <div style={{ minWidth: 0 }}>
                             <div className="h-mono h-muted" style={{ fontSize: 10, letterSpacing: '0.08em' }}>TIPO</div>
                             <div style={{ marginTop: 6 }}><LeaveTypeTag code={req.leaveType} /></div>
                         </div>
-                        <div>
+                        <div style={{ minWidth: 0 }}>
                             <div className="h-mono h-muted" style={{ fontSize: 10, letterSpacing: '0.08em' }}>DURATA</div>
-                            <div className="h-display" style={{ fontSize: 22, marginTop: 4 }}>
+                            <div className="h-display" style={{ fontSize: 20, marginTop: 4, whiteSpace: 'nowrap' }}>
                                 {req.requestedUnits}
                             </div>
                         </div>
