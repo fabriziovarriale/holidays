@@ -84,15 +84,23 @@ export default function UserDetailSlideover({ user, year, onClose }) {
         >
             {user && (
                 <div style={{ display: 'grid', gap: 18 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                         <span className="h-avatar lg">{initialsOf(user.firstName, user.lastName)}</span>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                             <div className="h-display" style={{ fontSize: 22 }}>{fullName}</div>
                             <div className="h-muted" style={{ fontSize: 12 }}>
                                 {user.jobRole ? <span className="h-chip" style={{ marginRight: 6 }}>{user.jobRole}</span> : null}
                                 {user.email}
                             </div>
                         </div>
+                        <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => router.post(route('admin.users.impersonate', user.id))}
+                        >
+                            <Icon name="user" size={14} />
+                            Entra come
+                        </Button>
                     </div>
 
                     <div

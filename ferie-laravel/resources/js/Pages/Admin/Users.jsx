@@ -108,7 +108,7 @@ export default function Users({ users, year }) {
                                         <th style={{ textAlign: 'right' }}>Budget</th>
                                         <th style={{ textAlign: 'right' }}>Usati</th>
                                         <th style={{ textAlign: 'right' }}>Residui</th>
-                                        <th style={{ textAlign: 'right' }}>Azioni</th>
+                                        <th style={{ width: 40 }}></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -131,17 +131,8 @@ export default function Users({ users, year }) {
                                             <td className="h-mono" style={{ textAlign: 'right', fontWeight: 700 }}>{u.allocatedDays}</td>
                                             <td className="h-mono" style={{ textAlign: 'right' }}>{u.usedDays}</td>
                                             <td className="h-mono" style={{ textAlign: 'right', fontWeight: 700 }}>{u.remaining}</td>
-                                            <td style={{ textAlign: 'right' }}>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        router.post(route('admin.users.impersonate', u.id));
-                                                    }}
-                                                    className="h-btn h-btn-sm h-btn-ghost"
-                                                >
-                                                    Entra come
-                                                </button>
+                                            <td style={{ textAlign: 'right', color: 'var(--h-muted)' }}>
+                                                <Icon name="chevR" size={16} />
                                             </td>
                                         </tr>
                                     ))}
@@ -202,17 +193,6 @@ export default function Users({ users, year }) {
                                                 {u.remaining} residui
                                             </span>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                router.post(route('admin.users.impersonate', u.id));
-                                            }}
-                                            className="h-btn h-btn-sm h-btn-ghost"
-                                            style={{ marginTop: 8, padding: '4px 10px' }}
-                                        >
-                                            Entra come
-                                        </button>
                                     </div>
                                     <Icon name="chevR" size={16} />
                                 </div>
