@@ -224,7 +224,7 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
                     <div style={{ display: 'flex', justifyContent: 'flex-start', flexShrink: 0 }}>{children}</div>
                     {has && (
                         <div
-                            className="hide-scrollbar"
+                            className="hide-scrollbar h-cal-entries"
                             style={{
                                 flex: 1,
                                 minHeight: 0,
@@ -241,6 +241,7 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
                                     <div
                                         key={`${e.userFullName}-${i}`}
                                         title={`${e.userFullName} — ${e.leaveType}`}
+                                        className="h-cal-pill"
                                         style={{
                                             display: 'flex',
                                             minWidth: 0,
@@ -253,6 +254,7 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
                                         }}
                                     >
                                         <span
+                                            className="h-cal-dot"
                                             style={{
                                                 flexShrink: 0,
                                                 width: 18,
@@ -271,7 +273,7 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
                                         >
                                             {initials(e.userFullName)}
                                         </span>
-                                        <span style={{ minWidth: 0, flex: 1, lineHeight: 1.2 }}>
+                                        <span className="h-cal-pill-text" style={{ minWidth: 0, flex: 1, lineHeight: 1.2 }}>
                                             <span
                                                 style={{
                                                     display: 'block',
@@ -302,7 +304,7 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
                                 );
                             })}
                             {entries.length > MAX_NAMES_IN_CELL && (
-                                <span className="h-muted" style={{ fontSize: 10, fontWeight: 600, paddingLeft: 2 }}>
+                                <span className="h-muted h-cal-more" style={{ fontSize: 10, fontWeight: 600, paddingLeft: 2 }}>
                                     +{entries.length - MAX_NAMES_IN_CELL} altri
                                 </span>
                             )}

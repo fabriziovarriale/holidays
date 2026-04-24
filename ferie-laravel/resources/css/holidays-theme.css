@@ -357,6 +357,31 @@
   .h-table thead th { padding: 8px 8px; }
   .h-table tbody td { padding: 10px 8px; }
 
+  /* Calendario: su mobile mostriamo solo il dischetto iniziali,
+     niente card bianca, niente nome/tipo. Dots in row con wrap. */
+  .h-cal-entries {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+    padding-right: 0 !important;
+  }
+  .h-cal-pill {
+    border: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    gap: 0 !important;
+  }
+  .h-cal-pill-text { display: none !important; }
+  /* Dot scala col viewport: 16px su phone piccoli, fino a 26px su
+     phone larghi/tablet in portrait. clamp(min, fluid, max). */
+  .h-cal-dot {
+    width: clamp(16px, 4.8vw, 26px) !important;
+    height: clamp(16px, 4.8vw, 26px) !important;
+    font-size: clamp(8px, 2.4vw, 12px) !important;
+  }
+  .h-cal-more { font-size: clamp(9px, 2.2vw, 11px) !important; }
+  .h-cal-entries { gap: clamp(2px, 0.8vw, 5px) !important; }
+
   /* Auth/Guest layouts compact */
   .h-card-lg { box-shadow: var(--h-shadow); }
 }
