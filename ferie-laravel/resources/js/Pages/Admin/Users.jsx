@@ -178,20 +178,6 @@ export default function Users({ users, year }) {
                                             >
                                                 {u.usedDays} / {u.allocatedDays} usati
                                             </span>
-                                            <span
-                                                className="h-mono"
-                                                style={{
-                                                    fontSize: 11,
-                                                    fontWeight: 700,
-                                                    color: 'var(--h-coral)',
-                                                    border: '2px solid var(--h-line)',
-                                                    padding: '2px 6px',
-                                                    borderRadius: 4,
-                                                    background: 'var(--h-surface)',
-                                                }}
-                                            >
-                                                {u.remaining} residui
-                                            </span>
                                         </div>
                                     </div>
                                     <Icon name="chevR" size={16} />
