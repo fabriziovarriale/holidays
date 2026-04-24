@@ -22,6 +22,7 @@ const PATHS = {
   upload:    <><path d="M12 20V8"/><path d="M6 12l6-6 6 6"/><path d="M4 4h16"/></>,
   bell:      <><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8z"/><path d="M10 21a2 2 0 0 0 4 0"/></>,
   search:    <><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></>,
+  filter:    <path d="M3 5h18l-7 9v6l-4-2v-4L3 5z"/>,
   clock:     <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,
   paperclip: <path d="M21 10l-9 9a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"/>,
   report:    <><path d="M4 20V4h13l3 3v13z"/><path d="M8 13v4M12 10v7M16 7v10"/></>,
