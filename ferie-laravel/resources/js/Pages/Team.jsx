@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/h/Icon';
 import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
 import Select from '@/Components/h/Select';
-import { fmtDate } from '@/lib/date';
+import { fmtDate, fmtPeriodIT } from '@/lib/date';
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
@@ -49,7 +49,7 @@ export default function TeamPage({ team, todayOff, upcoming, windowFrom, windowT
                 <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
                     <div>
                         <div className="h-mono" style={{ fontSize: 11, color: 'var(--h-muted)', letterSpacing: '0.1em' }}>
-                            TEAM · {fmtDate(windowFrom)} → {fmtDate(windowTo)}
+                            TEAM · {fmtPeriodIT(windowFrom, windowTo)}
                         </div>
                         <h1 className="h-display" style={{ fontSize: 44, marginTop: 4 }}>
                             Team.
@@ -177,7 +177,7 @@ export default function TeamPage({ team, todayOff, upcoming, windowFrom, windowT
                     <div style={{ padding: '18px 22px', borderBottom: 'var(--h-bw) solid var(--h-line)' }}>
                         <h3 className="h-heading" style={{ fontSize: 18 }}>Prossime assenze approvate</h3>
                         <p className="h-muted" style={{ fontSize: 13, marginTop: 4 }}>
-                            Finestra {fmtDate(windowFrom)} → {fmtDate(windowTo)}.
+                            Finestra {fmtPeriodIT(windowFrom, windowTo)}.
                         </p>
                     </div>
 
@@ -325,8 +325,17 @@ export default function TeamPage({ team, todayOff, upcoming, windowFrom, windowT
                                         </div>
                                         <div className="h-mono" style={{ fontSize: 10, letterSpacing: '0.06em' }}>
                                             {member.onLeaveToday ? (
-                                                <span style={{ color: 'var(--h-coral)', fontWeight: 700 }}>
-                                                    <Icon name="clock" size={10} /> FUORI OGGI
+                                                <span
+                                                    style={{
+                                                        color: 'var(--h-coral)',
+                                                        fontWeight: 700,
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: 6,
+                                                    }}
+                                                >
+                                                    <Icon name="clock" size={12} />
+                                                    FUORI OGGI
                                                 </span>
                                             ) : plans.length > 0 ? (
                                                 <span className="h-muted">
