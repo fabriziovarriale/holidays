@@ -231,72 +231,137 @@ export default function RequestsPage({ isAdmin, requests, leaveTypes, filters })
                         Nessuna richiesta con questi filtri.
                     </div>
                 ) : (
-                    <div style={{ overflowX: 'auto' }}>
-                        <table className="h-table">
-                            <thead>
-                                <tr>
-                                    {isAdmin && <th>Dipendente</th>}
-                                    <th>Tipo</th>
-                                    <th>Periodo</th>
-                                    <th style={{ textAlign: 'right' }}>Durata</th>
-                                    <th>Inviata</th>
-                                    <th>Stato</th>
-                                    <th>Nota</th>
-                                    <th style={{ width: 40 }}></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {requests.map((r) => (
-                                    <tr
-                                        key={r.id}
-                                        onClick={() => setSelected(r)}
-                                        style={{ cursor: 'pointer' }}
-                                    >
-                                        {isAdmin && (
-                                            <td>
-                                                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                                                    <span className="h-avatar xs">{initialsOf(r.userFullName)}</span>
-                                                    <div>
-                                                        <div style={{ fontWeight: 700 }}>{r.userFullName}</div>
-                                                        {r.userJobRole && (
-                                                            <div className="h-muted" style={{ fontSize: 11 }}>
-                                                                {r.userJobRole}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        )}
-                                        <td><LeaveTypeTag code={r.leaveType} /></td>
-                                        <td style={{ fontWeight: 600 }}>
-                                            {fmtITShort(r.startDate)} — {fmtITShort(r.endDate)}
-                                        </td>
-                                        <td className="h-mono" style={{ textAlign: 'right', fontWeight: 700 }}>
-                                            {r.requestedUnits}
-                                        </td>
-                                        <td className="h-muted h-mono" style={{ fontSize: 12 }}>
-                                            {fmtITShort(r.createdAt)}
-                                        </td>
-                                        <td><StatusBadge status={r.status} /></td>
-                                        <td
-                                            style={{
-                                                fontSize: 12,
-                                                fontStyle: 'italic',
-                                                color: 'var(--h-muted)',
-                                                maxWidth: 220,
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
-                                            }}
-                                        >
-                                            {r.noteAdmin || r.noteUser || '—'}
-                                        </td>
-                                        <td><Icon name="chevR" size={16} /></td>
+                    <>
+                        {/* Desktop: tabella densa */}
+                        <div className="h-desktop-only" style={{ overflowX: 'auto' }}>
+                            <table className="h-table">
+                                <thead>
+                                    <tr>
+                                        {isAdmin && <th>Dipendente</th>}
+                                        <th>Tipo</th>
+                                        <th>Periodo</th>
+                                        <th style={{ textAlign: 'right' }}>Durata</th>
+                                        <th>Inviata</th>
+                                        <th>Stato</th>
+                                        <th>Nota</th>
+                                        <th style={{ width: 40 }}></th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {requests.map((r) => (
+                                        <tr
+                                            key={r.id}
+                                            onClick={() => setSelected(r)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            {isAdmin && (
+                                                <td>
+                                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                                        <span className="h-avatar xs">{initialsOf(r.userFullName)}</span>
+                                                        <div>
+                                                            <div style={{ fontWeight: 700 }}>{r.userFullName}</div>
+                                                            {r.userJobRole && (
+                                                                <div className="h-muted" style={{ fontSize: 11 }}>
+                                                                    {r.userJobRole}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            )}
+                                            <td><LeaveTypeTag code={r.leaveType} /></td>
+                                            <td style={{ fontWeight: 600 }}>
+                                                {fmtITShort(r.startDate)} — {fmtITShort(r.endDate)}
+                                            </td>
+                                            <td className="h-mono" style={{ textAlign: 'right', fontWeight: 700 }}>
+                                                {r.requestedUnits}
+                                            </td>
+                                            <td className="h-muted h-mono" style={{ fontSize: 12 }}>
+                                                {fmtITShort(r.createdAt)}
+                                            </td>
+                                            <td><StatusBadge status={r.status} /></td>
+                                            <td
+                                                style={{
+                                                    fontSize: 12,
+                                                    fontStyle: 'italic',
+                                                    color: 'var(--h-muted)',
+                                                    maxWidth: 220,
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                }}
+                                            >
+                                                {r.noteAdmin || r.noteUser || '—'}
+                                            </td>
+                                            <td><Icon name="chevR" size={16} /></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile: lista card senza scroll orizzontale */}
+                        <div className="h-mobile-only" style={{ flexDirection: 'column' }}>
+                            {requests.map((r) => (
+                                <div
+                                    key={r.id}
+                                    onClick={() => setSelected(r)}
+                                    style={{
+                                        display: 'flex',
+                                        gap: 12,
+                                        alignItems: 'flex-start',
+                                        padding: '14px 18px',
+                                        borderBottom: '2px solid var(--h-ink)',
+                                        cursor: 'pointer',
+                                    }}
+                                >
+                                    {isAdmin && (
+                                        <span className="h-avatar xs" style={{ flexShrink: 0, marginTop: 2 }}>
+                                            {initialsOf(r.userFullName)}
+                                        </span>
+                                    )}
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        {isAdmin && (
+                                            <div style={{ fontWeight: 700, wordBreak: 'break-word' }}>
+                                                {r.userFullName}
+                                                {r.userJobRole && (
+                                                    <span className="h-muted" style={{ fontWeight: 400, fontSize: 11, marginLeft: 6 }}>
+                                                        · {r.userJobRole}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: isAdmin ? 6 : 0 }}>
+                                            <LeaveTypeTag code={r.leaveType} />
+                                            <StatusBadge status={r.status} />
+                                            <span className="h-mono" style={{ fontSize: 11, fontWeight: 700 }}>
+                                                {r.requestedUnits}
+                                            </span>
+                                        </div>
+                                        <div className="h-mono" style={{ fontSize: 12, color: 'var(--h-muted)', marginTop: 6 }}>
+                                            {fmtITShort(r.startDate)} → {fmtITShort(r.endDate)}
+                                            <span style={{ margin: '0 6px' }}>·</span>
+                                            inviata {fmtITShort(r.createdAt)}
+                                        </div>
+                                        {(r.noteAdmin || r.noteUser) && (
+                                            <div
+                                                style={{
+                                                    fontSize: 12,
+                                                    fontStyle: 'italic',
+                                                    color: 'var(--h-muted)',
+                                                    marginTop: 6,
+                                                    wordBreak: 'break-word',
+                                                }}
+                                            >
+                                                "{r.noteAdmin || r.noteUser}"
+                                            </div>
+                                        )}
+                                    </div>
+                                    <Icon name="chevR" size={16} />
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 )}
             </section>
 
