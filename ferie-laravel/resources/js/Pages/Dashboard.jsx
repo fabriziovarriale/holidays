@@ -211,45 +211,92 @@ function EmployeeView({ balance, requests, holidays }) {
         {requests.length === 0 ? (
           <div style={{ padding: 40, textAlign: 'center', color: 'var(--h-muted)' }}>Nessuna richiesta</div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="h-table">
-              <thead>
-                <tr>
-                  <th>Tipo</th>
-                  <th>Periodo</th>
-                  <th>Inviata</th>
-                  <th>Stato</th>
-                  <th>Note admin</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map((r) => (
-                  <tr key={r.id} onClick={() => setDetail(r)} style={{ cursor: 'pointer' }}>
-                    <td><LeaveTypeTag code={r.leaveType} /></td>
-                    <td>{fmtDate(r.startDate)} → {fmtDate(r.endDate)}</td>
-                    <td className="h-mono" style={{ fontSize: 13 }}>{fmtDateTime(r.createdAt)}</td>
-                    <td><StatusBadge status={r.status} /></td>
-                    <td style={{ fontSize: 13, color: 'var(--h-muted)', fontStyle: r.noteAdmin ? 'italic' : 'normal' }}>
-                      {r.noteAdmin || '—'}
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      {r.status === 'PENDING' && (
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); setPendingCancelId(r.id); }}
-                          className="h-btn h-btn-sm h-btn-ghost"
-                          style={{ color: 'var(--h-err)' }}
-                        >
-                          Annulla
-                        </button>
-                      )}
-                    </td>
+          <>
+            {/* Desktop: tabella densa */}
+            <div className="h-desktop-only" style={{ overflowX: 'auto' }}>
+              <table className="h-table">
+                <thead>
+                  <tr>
+                    <th>Tipo</th>
+                    <th>Periodo</th>
+                    <th>Inviata</th>
+                    <th>Stato</th>
+                    <th>Note admin</th>
+                    <th></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {requests.map((r) => (
+                    <tr key={r.id} onClick={() => setDetail(r)} style={{ cursor: 'pointer' }}>
+                      <td><LeaveTypeTag code={r.leaveType} /></td>
+                      <td>{fmtDate(r.startDate)} → {fmtDate(r.endDate)}</td>
+                      <td className="h-mono" style={{ fontSize: 13 }}>{fmtDateTime(r.createdAt)}</td>
+                      <td><StatusBadge status={r.status} /></td>
+                      <td style={{ fontSize: 13, color: 'var(--h-muted)', fontStyle: r.noteAdmin ? 'italic' : 'normal' }}>
+                        {r.noteAdmin || '—'}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        {r.status === 'PENDING' && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setPendingCancelId(r.id); }}
+                            className="h-btn h-btn-sm h-btn-ghost"
+                            style={{ color: 'var(--h-err)' }}
+                          >
+                            Annulla
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile: card stack senza scroll orizzontale */}
+            <div className="h-mobile-only" style={{ flexDirection: 'column' }}>
+              {requests.map((r) => (
+                <div
+                  key={r.id}
+                  onClick={() => setDetail(r)}
+                  style={{
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'flex-start',
+                    padding: '14px 18px',
+                    borderBottom: '2px solid var(--h-ink)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+                      <LeaveTypeTag code={r.leaveType} />
+                      <StatusBadge status={r.status} />
+                    </div>
+                    <div className="h-mono" style={{ fontSize: 12, color: 'var(--h-muted)', marginTop: 6 }}>
+                      {fmtDate(r.startDate)} → {fmtDate(r.endDate)}
+                    </div>
+                    {r.noteAdmin && (
+                      <div style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--h-muted)', marginTop: 6, wordBreak: 'break-word' }}>
+                        "{r.noteAdmin}"
+                      </div>
+                    )}
+                    {r.status === 'PENDING' && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setPendingCancelId(r.id); }}
+                        className="h-btn h-btn-sm h-btn-ghost"
+                        style={{ color: 'var(--h-err)', marginTop: 8, padding: '4px 10px' }}
+                      >
+                        Annulla richiesta
+                      </button>
+                    )}
+                  </div>
+                  <Icon name="chevR" size={16} />
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </section>
 
