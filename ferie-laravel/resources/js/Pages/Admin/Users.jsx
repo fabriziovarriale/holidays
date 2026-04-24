@@ -96,56 +96,129 @@ export default function Users({ users, year }) {
                         Nessun dipendente
                     </div>
                 ) : (
-                    <div style={{ overflowX: 'auto' }}>
-                        <table className="h-table">
-                            <thead>
-                                <tr>
-                                    <th>Nome</th>
-                                    <th>Email</th>
-                                    <th>Ruolo</th>
-                                    <th style={{ textAlign: 'right' }}>Budget</th>
-                                    <th style={{ textAlign: 'right' }}>Usati</th>
-                                    <th style={{ textAlign: 'right' }}>Residui</th>
-                                    <th style={{ textAlign: 'right' }}>Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {users.map((u) => (
-                                    <tr
-                                        key={u.id}
-                                        onClick={() => setSelectedUser(u)}
-                                        style={{ cursor: 'pointer' }}
-                                    >
-                                        <td>
-                                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                                                <span className="h-avatar xs">{initialsOf(u.firstName, u.lastName)}</span>
-                                                <span style={{ fontWeight: 600 }}>
-                                                    {[u.firstName, u.lastName].filter(Boolean).join(' ') || '—'}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td style={{ color: 'var(--h-muted)' }}>{u.email}</td>
-                                        <td>{u.jobRole ? <span className="h-chip">{u.jobRole}</span> : <span className="h-muted">—</span>}</td>
-                                        <td className="h-mono" style={{ textAlign: 'right', fontWeight: 700 }}>{u.allocatedDays}</td>
-                                        <td className="h-mono" style={{ textAlign: 'right' }}>{u.usedDays}</td>
-                                        <td className="h-mono" style={{ textAlign: 'right', fontWeight: 700 }}>{u.remaining}</td>
-                                        <td style={{ textAlign: 'right' }}>
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    router.post(route('admin.users.impersonate', u.id));
-                                                }}
-                                                className="h-btn h-btn-sm h-btn-ghost"
-                                            >
-                                                Entra come
-                                            </button>
-                                        </td>
+                    <>
+                        {/* Desktop: tabella completa */}
+                        <div className="h-desktop-only" style={{ overflowX: 'auto' }}>
+                            <table className="h-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Email</th>
+                                        <th>Ruolo</th>
+                                        <th style={{ textAlign: 'right' }}>Budget</th>
+                                        <th style={{ textAlign: 'right' }}>Usati</th>
+                                        <th style={{ textAlign: 'right' }}>Residui</th>
+                                        <th style={{ textAlign: 'right' }}>Azioni</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {users.map((u) => (
+                                        <tr
+                                            key={u.id}
+                                            onClick={() => setSelectedUser(u)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <td>
+                                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                                                    <span className="h-avatar xs">{initialsOf(u.firstName, u.lastName)}</span>
+                                                    <span style={{ fontWeight: 600 }}>
+                                                        {[u.firstName, u.lastName].filter(Boolean).join(' ') || '—'}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td style={{ color: 'var(--h-muted)' }}>{u.email}</td>
+                                            <td>{u.jobRole ? <span className="h-chip">{u.jobRole}</span> : <span className="h-muted">—</span>}</td>
+                                            <td className="h-mono" style={{ textAlign: 'right', fontWeight: 700 }}>{u.allocatedDays}</td>
+                                            <td className="h-mono" style={{ textAlign: 'right' }}>{u.usedDays}</td>
+                                            <td className="h-mono" style={{ textAlign: 'right', fontWeight: 700 }}>{u.remaining}</td>
+                                            <td style={{ textAlign: 'right' }}>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        router.post(route('admin.users.impersonate', u.id));
+                                                    }}
+                                                    className="h-btn h-btn-sm h-btn-ghost"
+                                                >
+                                                    Entra come
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile: lista card */}
+                        <div className="h-mobile-only" style={{ flexDirection: 'column' }}>
+                            {users.map((u) => (
+                                <div
+                                    key={u.id}
+                                    onClick={() => setSelectedUser(u)}
+                                    style={{
+                                        display: 'flex',
+                                        gap: 12,
+                                        alignItems: 'flex-start',
+                                        padding: '14px 18px',
+                                        borderBottom: '2px solid var(--h-ink)',
+                                        cursor: 'pointer',
+                                    }}
+                                >
+                                    <span className="h-avatar xs" style={{ flexShrink: 0, marginTop: 2 }}>
+                                        {initialsOf(u.firstName, u.lastName)}
+                                    </span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontWeight: 700, wordBreak: 'break-word' }}>
+                                            {[u.firstName, u.lastName].filter(Boolean).join(' ') || '—'}
+                                        </div>
+                                        <div className="h-muted" style={{ fontSize: 12, wordBreak: 'break-all' }}>
+                                            {u.email}
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                                            {u.jobRole && <span className="h-chip">{u.jobRole}</span>}
+                                            <span
+                                                className="h-mono"
+                                                style={{
+                                                    fontSize: 11,
+                                                    border: '2px solid var(--h-line)',
+                                                    padding: '2px 6px',
+                                                    borderRadius: 4,
+                                                }}
+                                            >
+                                                {u.usedDays} / {u.allocatedDays} usati
+                                            </span>
+                                            <span
+                                                className="h-mono"
+                                                style={{
+                                                    fontSize: 11,
+                                                    fontWeight: 700,
+                                                    color: 'var(--h-coral)',
+                                                    border: '2px solid var(--h-line)',
+                                                    padding: '2px 6px',
+                                                    borderRadius: 4,
+                                                    background: 'var(--h-surface)',
+                                                }}
+                                            >
+                                                {u.remaining} residui
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                router.post(route('admin.users.impersonate', u.id));
+                                            }}
+                                            className="h-btn h-btn-sm h-btn-ghost"
+                                            style={{ marginTop: 8, padding: '4px 10px' }}
+                                        >
+                                            Entra come
+                                        </button>
+                                    </div>
+                                    <Icon name="chevR" size={16} />
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 )}
             </section>
 
