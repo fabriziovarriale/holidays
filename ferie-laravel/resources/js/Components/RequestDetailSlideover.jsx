@@ -4,7 +4,7 @@ import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
 import StatusBadge from '@/Components/h/StatusBadge';
 import ConfirmDialog from '@/Components/ConfirmDialog';
 import Slideover from '@/Components/Slideover';
-import { fmtDate, fmtDateTime } from '@/lib/date';
+import { fmtDate, fmtDateTime, fmtPeriodIT } from '@/lib/date';
 import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
@@ -242,15 +242,13 @@ export default function RequestDetailSlideover({ request: req, show, onClose, va
                                 style={{
                                     fontSize: 15,
                                     marginTop: 4,
-                                    whiteSpace: 'nowrap',
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
+                                    wordBreak: 'break-word',
                                 }}
                                 title={`${fmtDate(req.startDate)} — ${fmtDate(req.endDate)}`}
                             >
-                                {fmtDate(req.startDate)}
-                                <span style={{ margin: '0 4px' }}>—</span>
-                                {fmtDate(req.endDate)}
+                                {fmtPeriodIT(req.startDate, req.endDate)}
                             </div>
                         </div>
                         <div style={{ minWidth: 0 }}>

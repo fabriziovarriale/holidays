@@ -46,3 +46,41 @@ export function fmtDateShort(value) {
     if (!d) return '—';
     return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
 }
+
+const MESI_IT = [
+    'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+    'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre',
+];
+
+/**
+ * Formato narrativo per un periodo, tipo "21-24 Giugno" o
+ * "28 Giugno — 3 Luglio 2026". L'anno compare solo se diverso da
+ * quello corrente, o se inizio e fine sono su anni differenti.
+ */
+export function fmtPeriodIT(start, end) {
+    const s = toDate(start);
+    const e = toDate(end);
+    if (!s && !e) return '—';
+    if (!e || (s && s.getTime() === e.getTime())) {
+        const only = s ?? e;
+        const currentYear = new Date().getFullYear();
+        const yearSuffix = only.getFullYear() !== currentYear ? ` ${only.getFullYear()}` : '';
+        return `${only.getDate()} ${MESI_IT[only.getMonth()]}${yearSuffix}`;
+    }
+    if (!s) return `${e.getDate()} ${MESI_IT[e.getMonth()]} ${e.getFullYear()}`;
+
+    const currentYear = new Date().getFullYear();
+    const sameYear = s.getFullYear() === e.getFullYear();
+    const sameMonth = sameYear && s.getMonth() === e.getMonth();
+    const showYear = !sameYear || s.getFullYear() !== currentYear;
+
+    if (sameMonth) {
+        return `${s.getDate()}-${e.getDate()} ${MESI_IT[s.getMonth()]}${showYear ? ` ${e.getFullYear()}` : ''}`;
+    }
+    if (sameYear) {
+        const startPart = `${s.getDate()} ${MESI_IT[s.getMonth()]}`;
+        const endPart = `${e.getDate()} ${MESI_IT[e.getMonth()]}${showYear ? ` ${e.getFullYear()}` : ''}`;
+        return `${startPart} — ${endPart}`;
+    }
+    return `${s.getDate()} ${MESI_IT[s.getMonth()]} ${s.getFullYear()} — ${e.getDate()} ${MESI_IT[e.getMonth()]} ${e.getFullYear()}`;
+}
