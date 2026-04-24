@@ -340,12 +340,16 @@ function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRe
 
   return (
     <div style={{ display: 'grid', gap: 18 }}>
-      {/* StatCards */}
+      {/* StatCards — su mobile mostriamo solo In attesa e Oggi in ufficio */}
       <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
         <StatCard label="IN ATTESA"     value={pendingRequests.length} tone="yellow" />
         <StatCard label="OGGI IN UFFICIO" value={`${Math.max(0, employeesCount - outToday)}/${employeesCount}`} tone="mint" />
-        <StatCard label="APPROVATE ANNO" value={approved} />
-        <StatCard label="TASSO APPROVAZIONE" value={`${approvalRate}%`} tone="coral" />
+        <div className="h-desktop-only">
+          <StatCard label="APPROVATE ANNO" value={approved} />
+        </div>
+        <div className="h-desktop-only">
+          <StatCard label="TASSO APPROVAZIONE" value={`${approvalRate}%`} tone="coral" />
+        </div>
       </section>
 
       {/* Pending queue */}
@@ -368,57 +372,75 @@ function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRe
               <div
                 key={r.id}
                 onClick={() => setDetail(r)}
+                className="h-queue-row"
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'auto 1fr auto auto',
-                  gap: 14, padding: '14px 22px',
+                  padding: '14px 18px',
                   borderBottom: '2px solid var(--h-ink)',
-                  alignItems: 'center',
                   cursor: 'pointer',
                 }}
               >
-                <span className="h-avatar">{initialsOf(r.userFullName)}</span>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <strong>{r.userFullName}</strong>
-                    {r.jobRole && <span className="h-chip">{r.jobRole}</span>}
-                    <LeaveTypeTag code={r.leaveType} />
-                    {r.roleConflictWarning && (
-                      <span className="h-chip" style={{ background: 'var(--h-rose)', borderColor: 'var(--h-line)' }}>
-                        <Icon name="warning" size={12} /> Conflitto
-                      </span>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span className="h-avatar" style={{ flexShrink: 0 }}>
+                    {initialsOf(r.userFullName)}
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, marginBottom: 4, wordBreak: 'break-word' }}>
+                      {r.userFullName}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      {r.jobRole && <span className="h-chip">{r.jobRole}</span>}
+                      <LeaveTypeTag code={r.leaveType} />
+                      {r.roleConflictWarning && (
+                        <span className="h-chip" style={{ background: 'var(--h-rose)', borderColor: 'var(--h-line)' }}>
+                          <Icon name="warning" size={12} /> Conflitto
+                        </span>
+                      )}
+                    </div>
+                    <div className="h-mono" style={{ fontSize: 12, color: 'var(--h-muted)' }}>
+                      {r.startDate} → {r.endDate} · {r.duration || `${r.days || '?'}g`}
+                    </div>
+                    {r.noteUser && (
+                      <div style={{ fontSize: 13, fontStyle: 'italic', marginTop: 4, color: 'var(--h-muted)' }}>
+                        "{r.noteUser}"
+                      </div>
                     )}
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--h-muted)' }}>
-                    {r.startDate} → {r.endDate} · {r.duration || `${r.days || '?'}g`}
-                  </div>
-                  {r.noteUser && (
-                    <div style={{ fontSize: 13, fontStyle: 'italic', marginTop: 4 }}>"{r.noteUser}"</div>
-                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm(`Rifiutare la richiesta di ${r.userFullName}?`)) {
-                      router.patch(route('admin.requests.reject', r.id), { note_admin: '' }, { preserveScroll: true });
-                    }
+
+                <div
+                  className="h-queue-actions"
+                  style={{
+                    display: 'flex',
+                    gap: 8,
+                    marginTop: 10,
+                    justifyContent: 'flex-end',
                   }}
-                  className="h-btn h-btn-sm"
-                  style={{ background: 'var(--h-rose)' }}
                 >
-                  Rifiuta
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    router.patch(route('admin.requests.approve', r.id), {}, { preserveScroll: true });
-                  }}
-                  className="h-btn h-btn-sm h-btn-primary"
-                >
-                  Approva
-                </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Rifiutare la richiesta di ${r.userFullName}?`)) {
+                        router.patch(route('admin.requests.reject', r.id), { note_admin: '' }, { preserveScroll: true });
+                      }
+                    }}
+                    className="h-btn h-btn-sm"
+                    style={{ background: 'var(--h-rose)', flex: '0 1 auto' }}
+                  >
+                    Rifiuta
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.patch(route('admin.requests.approve', r.id), {}, { preserveScroll: true });
+                    }}
+                    className="h-btn h-btn-sm h-btn-primary"
+                    style={{ flex: '0 1 auto' }}
+                  >
+                    Approva
+                  </button>
+                </div>
               </div>
             ))}
           </div>

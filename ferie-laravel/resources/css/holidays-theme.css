@@ -290,6 +290,18 @@
 .h-desktop-only { /* visible by default on desktop */ }
 .h-mobile-only { display: none !important; }
 
+/* Coda approvazioni: su desktop info+azioni inline, su mobile stack */
+@media (min-width: 769px) {
+  .h-queue-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: center;
+  }
+  .h-queue-row > :first-child { min-width: 0; }
+  .h-queue-actions { margin-top: 0 !important; }
+}
+
 @media (max-width: 768px) {
   /* Layout shell */
   .h-app-shell { grid-template-columns: 1fr !important; }
