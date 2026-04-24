@@ -11,6 +11,7 @@ import CreateRequestSlideover from '@/Components/CreateRequestSlideover';
 import RequestDetailSlideover from '@/Components/RequestDetailSlideover';
 import ConfirmDialog from '@/Components/ConfirmDialog';
 import ApprovedLeaveImpactCalendar from '@/Components/ApprovedLeaveImpactCalendar';
+import { fmtDate, fmtDateTime } from '@/lib/date';
 
 export default function Dashboard({
   user,
@@ -178,7 +179,7 @@ function EmployeeView({ balance, requests, holidays }) {
                     <LeaveTypeTag code={r.leaveType} />
                   </div>
                   <div style={{ fontSize: 13, marginTop: 2 }}>
-                    {r.startDate} → {r.endDate}
+                    {fmtDate(r.startDate)} → {fmtDate(r.endDate)}
                   </div>
                 </div>
                 <Icon name="chevR" size={16} />
@@ -195,7 +196,7 @@ function EmployeeView({ balance, requests, holidays }) {
                 <div className="h-label">PROSSIMA FESTIVITÀ</div>
                 <div style={{ fontWeight: 700, marginTop: 2 }}>{nextHoliday.name}</div>
               </div>
-              <div className="h-mono" style={{ fontSize: 13, fontWeight: 700 }}>{nextHoliday.date}</div>
+              <div className="h-mono" style={{ fontSize: 13, fontWeight: 700 }}>{fmtDate(nextHoliday.date)}</div>
             </div>
           </div>
         )}
@@ -226,8 +227,8 @@ function EmployeeView({ balance, requests, holidays }) {
                 {requests.map((r) => (
                   <tr key={r.id} onClick={() => setDetail(r)} style={{ cursor: 'pointer' }}>
                     <td><LeaveTypeTag code={r.leaveType} /></td>
-                    <td>{r.startDate} → {r.endDate}</td>
-                    <td className="h-mono" style={{ fontSize: 13 }}>{r.createdAt || '—'}</td>
+                    <td>{fmtDate(r.startDate)} → {fmtDate(r.endDate)}</td>
+                    <td className="h-mono" style={{ fontSize: 13 }}>{fmtDateTime(r.createdAt)}</td>
                     <td><StatusBadge status={r.status} /></td>
                     <td style={{ fontSize: 13, color: 'var(--h-muted)', fontStyle: r.noteAdmin ? 'italic' : 'normal' }}>
                       {r.noteAdmin || '—'}
@@ -398,7 +399,7 @@ function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRe
                     )}
                   </div>
                   <div className="h-mono" style={{ fontSize: 12, color: 'var(--h-muted)' }}>
-                    {r.startDate} → {r.endDate} · {r.duration || `${r.days || '?'}g`}
+                    {fmtDate(r.startDate)} → {fmtDate(r.endDate)} · {r.duration || `${r.days || '?'}g`}
                   </div>
                   {r.noteUser && (
                     <div style={{ fontSize: 13, fontStyle: 'italic', marginTop: 4, color: 'var(--h-muted)' }}>

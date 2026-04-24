@@ -1,6 +1,7 @@
 import Button from '@/Components/h/Button';
 import Icon from '@/Components/h/Icon';
 import Slideover from '@/Components/Slideover';
+import { fmtDate, fmtDateTime } from '@/lib/date';
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { format, parse } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -82,12 +83,7 @@ function buildDetailRows(entries) {
     return [...map.values()];
 }
 
-function formatDateTime(value) {
-    if (!value) return '—';
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return '—';
-    return format(d, 'dd/MM/yyyy HH:mm');
-}
+const formatDateTime = fmtDateTime;
 
 function initials(name) {
     const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -477,7 +473,7 @@ export default function ApprovedLeaveImpactCalendar({ approvedEntries = [], holi
                     <Slideover
                         show={Boolean(detailDay)}
                         onClose={closeDetail}
-                        title={detailDay ? format(detailDay, 'd MMMM yyyy', { locale: it }) : ''}
+                        title={detailDay ? fmtDate(detailDay) : ''}
                     >
                         {detailDay && detailRows.length === 0 && (
                             <p className="h-muted" style={{ fontSize: 13 }}>

@@ -4,6 +4,7 @@ import Icon from '@/Components/h/Icon';
 import Select from '@/Components/h/Select';
 import StatCard from '@/Components/h/StatCard';
 import ExportCsvSlideover from '@/Components/ExportCsvSlideover';
+import { fmtDate } from '@/lib/date';
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
@@ -30,13 +31,6 @@ const ACTIVITY_COLOR = {
     cancelled: 'var(--h-bg-2)',
     pending: 'var(--h-yellow)',
 };
-
-function fmtActivityDate(value) {
-    if (!value) return '—';
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return String(value);
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
-}
 
 export default function ReportsPage({ year, stats, monthly, roleBreakdown, activity = [] }) {
     const [exportOpen, setExportOpen] = useState(false);
@@ -159,7 +153,7 @@ export default function ReportsPage({ year, stats, monthly, roleBreakdown, activ
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ fontSize: 13 }}>{a.text}</div>
                                         <div className="h-muted h-mono" style={{ fontSize: 10, marginTop: 2, letterSpacing: '0.04em' }}>
-                                            {fmtActivityDate(a.at)}
+                                            {fmtDate(a.at)}
                                         </div>
                                     </div>
                                 </li>

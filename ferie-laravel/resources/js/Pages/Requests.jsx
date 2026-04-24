@@ -5,6 +5,7 @@ import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
 import Select from '@/Components/h/Select';
 import StatusBadge from '@/Components/h/StatusBadge';
 import RequestDetailSlideover from '@/Components/RequestDetailSlideover';
+import { fmtDate } from '@/lib/date';
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
@@ -15,13 +16,6 @@ const STATUSES = [
     { key: 'REJECTED', label: 'Rifiutate' },
     { key: 'CANCELLED', label: 'Annullate' },
 ];
-
-function fmtITShort(value) {
-    if (!value) return '—';
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return String(value);
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
-}
 
 function initialsOf(fullName) {
     if (!fullName) return '—';
@@ -271,13 +265,13 @@ export default function RequestsPage({ isAdmin, requests, leaveTypes, filters })
                                             )}
                                             <td><LeaveTypeTag code={r.leaveType} /></td>
                                             <td style={{ fontWeight: 600 }}>
-                                                {fmtITShort(r.startDate)} — {fmtITShort(r.endDate)}
+                                                {fmtDate(r.startDate)} — {fmtDate(r.endDate)}
                                             </td>
                                             <td className="h-mono" style={{ textAlign: 'right', fontWeight: 700 }}>
                                                 {r.requestedUnits}
                                             </td>
                                             <td className="h-muted h-mono" style={{ fontSize: 12 }}>
-                                                {fmtITShort(r.createdAt)}
+                                                {fmtDate(r.createdAt)}
                                             </td>
                                             <td><StatusBadge status={r.status} /></td>
                                             <td
@@ -339,9 +333,9 @@ export default function RequestsPage({ isAdmin, requests, leaveTypes, filters })
                                             </span>
                                         </div>
                                         <div className="h-mono" style={{ fontSize: 12, color: 'var(--h-muted)', marginTop: 6 }}>
-                                            {fmtITShort(r.startDate)} → {fmtITShort(r.endDate)}
+                                            {fmtDate(r.startDate)} → {fmtDate(r.endDate)}
                                             <span style={{ margin: '0 6px' }}>·</span>
-                                            inviata {fmtITShort(r.createdAt)}
+                                            inviata {fmtDate(r.createdAt)}
                                         </div>
                                         {(r.noteAdmin || r.noteUser) && (
                                             <div

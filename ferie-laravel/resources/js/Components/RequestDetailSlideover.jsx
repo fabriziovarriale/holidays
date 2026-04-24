@@ -4,29 +4,9 @@ import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
 import StatusBadge from '@/Components/h/StatusBadge';
 import ConfirmDialog from '@/Components/ConfirmDialog';
 import Slideover from '@/Components/Slideover';
+import { fmtDate, fmtDateTime } from '@/lib/date';
 import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-
-function fmtIT(value) {
-    if (!value) return '—';
-    const d = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(d.getTime())) return String(value);
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
-function fmtITShort(value) {
-    if (!value) return '—';
-    const d = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(d.getTime())) return String(value);
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
-}
-
-function fmtITDateTime(value) {
-    if (!value) return null;
-    const d = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(d.getTime())) return String(value);
-    return d.toLocaleString('it-IT', { dateStyle: 'medium', timeStyle: 'short' });
-}
 
 function initialsOf(fullName) {
     if (!fullName) return '—';
@@ -157,7 +137,7 @@ export default function RequestDetailSlideover({ request: req, show, onClose, va
     };
 
     const title = `Richiesta${req.id ? ` #${req.id}` : ''}`;
-    const createdLabel = fmtITDateTime(req.createdAt);
+    const createdLabel = fmtDateTime(req.createdAt);
     const isMalattia = String(req.leaveType ?? '').toUpperCase() === 'MALATTIA';
 
     const footer = (() => {
@@ -266,11 +246,11 @@ export default function RequestDetailSlideover({ request: req, show, onClose, va
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
                                 }}
-                                title={`${fmtITShort(req.startDate)} — ${fmtITShort(req.endDate)}`}
+                                title={`${fmtDate(req.startDate)} — ${fmtDate(req.endDate)}`}
                             >
-                                {fmtITShort(req.startDate)}
+                                {fmtDate(req.startDate)}
                                 <span style={{ margin: '0 4px' }}>—</span>
-                                {fmtITShort(req.endDate)}
+                                {fmtDate(req.endDate)}
                             </div>
                         </div>
                         <div style={{ minWidth: 0 }}>
@@ -359,10 +339,10 @@ export default function RequestDetailSlideover({ request: req, show, onClose, va
                     <ol style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'grid', gap: 10 }}>
                         <TimelineStep done label="Richiesta inviata" when={createdLabel || '—'} />
                         {req.status === 'APPROVED' && (
-                            <TimelineStep done label="Approvata" when={fmtIT(req.approvedAt)} />
+                            <TimelineStep done label="Approvata" when={fmtDate(req.approvedAt)} />
                         )}
                         {req.status === 'REJECTED' && (
-                            <TimelineStep done error label="Rifiutata" when={fmtIT(req.approvedAt)} />
+                            <TimelineStep done error label="Rifiutata" when={fmtDate(req.approvedAt)} />
                         )}
                         {req.status === 'CANCELLED' && (
                             <TimelineStep done error label="Annullata" when="—" />

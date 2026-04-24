@@ -4,6 +4,7 @@ import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
 import Select from '@/Components/h/Select';
 import DatePickerField, { parseYmdToLocalDate } from '@/Components/DatePickerField';
 import SlideoverAlert from '@/Components/SlideoverAlert';
+import { fmtDate } from '@/lib/date';
 import { useForm, usePage } from '@inertiajs/react';
 import { addDays, startOfDay } from 'date-fns';
 import { useEffect, useMemo, useRef } from 'react';
@@ -301,8 +302,7 @@ export default function LeaveRequestForm({
                     </div>
                     <div style={{ flex: 1, fontSize: 12 }}>
                         <div>
-                            Dal <b>{new Date(data.startDate).toLocaleDateString('it-IT')}</b> al{' '}
-                            <b>{new Date(data.endDate).toLocaleDateString('it-IT')}</b>
+                            Dal <b>{fmtDate(data.startDate)}</b> al <b>{fmtDate(data.endDate)}</b>
                         </div>
                         <div className="h-muted">Esclusi weekend e festività.</div>
                         {displayBalance != null && selectedType?.deductsBalance && (

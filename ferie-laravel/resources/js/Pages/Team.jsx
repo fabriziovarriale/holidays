@@ -2,21 +2,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/h/Icon';
 import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
 import Select from '@/Components/h/Select';
+import { fmtDate } from '@/lib/date';
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-
-function fmtITShort(value) {
-    if (!value) return '—';
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return String(value);
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
-}
-
-function fmtITLong(value) {
-    if (!value) return '—';
-    const d = new Date(value);
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
-}
 
 function initialsOf(firstName, lastName) {
     const a = (firstName?.[0] || '').toUpperCase();
@@ -61,7 +49,7 @@ export default function TeamPage({ team, todayOff, upcoming, windowFrom, windowT
                 <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
                     <div>
                         <div className="h-mono" style={{ fontSize: 11, color: 'var(--h-muted)', letterSpacing: '0.1em' }}>
-                            TEAM · {fmtITShort(windowFrom)} → {fmtITShort(windowTo)}
+                            TEAM · {fmtDate(windowFrom)} → {fmtDate(windowTo)}
                         </div>
                         <h1 className="h-display" style={{ fontSize: 44, marginTop: 4 }}>
                             Team.
@@ -175,7 +163,7 @@ export default function TeamPage({ team, todayOff, upcoming, windowFrom, windowT
                                             </div>
                                             <div className="h-muted" style={{ fontSize: 11, display: 'flex', gap: 6, alignItems: 'center' }}>
                                                 <LeaveTypeTag code={r.leaveType} />
-                                                <span>· rientra {fmtITShort(r.returnsOn)}</span>
+                                                <span>· rientra {fmtDate(r.returnsOn)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -189,7 +177,7 @@ export default function TeamPage({ team, todayOff, upcoming, windowFrom, windowT
                     <div style={{ padding: '18px 22px', borderBottom: 'var(--h-bw) solid var(--h-line)' }}>
                         <h3 className="h-heading" style={{ fontSize: 18 }}>Prossime assenze approvate</h3>
                         <p className="h-muted" style={{ fontSize: 13, marginTop: 4 }}>
-                            Finestra {fmtITLong(windowFrom)} → {fmtITLong(windowTo)}.
+                            Finestra {fmtDate(windowFrom)} → {fmtDate(windowTo)}.
                         </p>
                     </div>
 
@@ -232,7 +220,7 @@ export default function TeamPage({ team, todayOff, upcoming, windowFrom, windowT
                                                     </td>
                                                     <td><LeaveTypeTag code={r.leaveType} /></td>
                                                     <td style={{ fontWeight: 600 }}>
-                                                        {fmtITShort(r.startDate)} — {fmtITShort(r.endDate)}
+                                                        {fmtDate(r.startDate)} — {fmtDate(r.endDate)}
                                                     </td>
                                                     <td className="h-mono" style={{ textAlign: 'right', fontWeight: 700 }}>
                                                         {r.requestedUnits}
@@ -282,7 +270,7 @@ export default function TeamPage({ team, todayOff, upcoming, windowFrom, windowT
                                                     </span>
                                                 </div>
                                                 <div className="h-mono" style={{ fontSize: 12, color: 'var(--h-muted)', marginTop: 6 }}>
-                                                    {fmtITShort(r.startDate)} → {fmtITShort(r.endDate)}
+                                                    {fmtDate(r.startDate)} → {fmtDate(r.endDate)}
                                                     <span style={{ margin: '0 6px' }}>·</span>
                                                     {diff == null ? '—' : diff === 0 ? 'oggi' : `tra ${diff}g`}
                                                 </div>
@@ -342,7 +330,7 @@ export default function TeamPage({ team, todayOff, upcoming, windowFrom, windowT
                                                 </span>
                                             ) : plans.length > 0 ? (
                                                 <span className="h-muted">
-                                                    Prossima: {fmtITShort(plans[0].startDate)} ({plans[0].leaveType})
+                                                    Prossima: {fmtDate(plans[0].startDate)} ({plans[0].leaveType})
                                                 </span>
                                             ) : (
                                                 <span className="h-muted">Nessuna assenza pianificata</span>
