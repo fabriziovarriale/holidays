@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { router } from '@inertiajs/react';
 import Icon from '@/Components/h/Icon';
 
-const POLL_MS = 60_000;
+const POLL_MS = 15_000;
 
 function timeAgo(iso) {
   if (!iso) return '';
@@ -62,7 +62,15 @@ export default function NotificationsBell({ compact = false, align = 'right' }) 
   useEffect(() => {
     fetchData();
     const t = setInterval(fetchData, POLL_MS);
-    return () => clearInterval(t);
+    const onFocus = () => fetchData();
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchData(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   useEffect(() => {
