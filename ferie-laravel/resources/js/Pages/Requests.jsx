@@ -31,13 +31,11 @@ export default function RequestsPage({ isAdmin, requests, leaveTypes, filters })
     const [filtersOpen, setFiltersOpen] = useState(false);
 
     useEffect(() => {
-        if (typeof window === 'undefined') return;
-        const params = new URLSearchParams(window.location.search);
-        const requested = params.get('request');
+        const requested = filters?.request;
         if (!requested) return;
         const match = requests.find((r) => String(r.id) === String(requested));
         if (match) setSelected(match);
-    }, [requests]);
+    }, [filters?.request, requests]);
 
     const activeStatus = filters?.status || 'ALL';
     const activeType = filters?.type || 'ALL';

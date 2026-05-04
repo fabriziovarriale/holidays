@@ -93,6 +93,7 @@ class RequestsController extends Controller
                 'status' => $status,
                 'type' => $type,
                 'q' => $search,
+                'request' => $request->query('request'),
             ],
         ]);
     }
