@@ -14,10 +14,6 @@ function timeAgo(iso) {
   return `${Math.floor(diff / 86400)}g fa`;
 }
 
-function csrfToken() {
-  return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-}
-
 export default function NotificationsBell({ compact = false, align = 'right' }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
@@ -105,9 +101,7 @@ export default function NotificationsBell({ compact = false, align = 'right' }) 
 
   const markRead = async (id) => {
     try {
-      const r = await window.axios.post(`/notifications/${id}/read`, {}, {
-        headers: { 'X-CSRF-TOKEN': csrfToken() },
-      });
+      const r = await window.axios.post(`/notifications/${id}/read`);
       setUnread(r.data.unread_count || 0);
       setItems((prev) => prev.map((n) => n.id === id ? { ...n, read_at: new Date().toISOString() } : n));
     } catch {}
@@ -115,9 +109,7 @@ export default function NotificationsBell({ compact = false, align = 'right' }) 
 
   const markAllRead = async () => {
     try {
-      const r = await window.axios.post('/notifications/read-all', {}, {
-        headers: { 'X-CSRF-TOKEN': csrfToken() },
-      });
+      const r = await window.axios.post('/notifications/read-all');
       setUnread(r.data.unread_count || 0);
       const now = new Date().toISOString();
       setItems((prev) => prev.map((n) => ({ ...n, read_at: n.read_at || now })));
