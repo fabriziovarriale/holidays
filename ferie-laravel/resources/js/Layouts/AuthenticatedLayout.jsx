@@ -1,5 +1,6 @@
 import { Link, usePage, router } from '@inertiajs/react';
 import Icon from '@/Components/h/Icon';
+import NotificationsBell from '@/Components/h/NotificationsBell';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -70,19 +71,23 @@ export default function AuthenticatedLayout({ header, children }) {
           height: '100vh',
         }}
       >
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: 8,
-            background: 'var(--h-coral)',
-            border: 'var(--h-bw) solid var(--h-line)',
-            display: 'grid', placeItems: 'center',
-            fontFamily: 'var(--h-display)', fontSize: 22, color: 'var(--h-ink)',
-          }}>U</div>
-          <div>
-            <div className="h-display" style={{ fontSize: 18, lineHeight: 1 }}>Holidays</div>
-            <div className="h-mono" style={{ fontSize: 10, color: 'var(--h-muted)', letterSpacing: '0.1em' }}>BITBOSS</div>
-          </div>
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit', flex: 1, minWidth: 0 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 8,
+              background: 'var(--h-coral)',
+              border: 'var(--h-bw) solid var(--h-line)',
+              display: 'grid', placeItems: 'center',
+              fontFamily: 'var(--h-display)', fontSize: 22, color: 'var(--h-ink)',
+              flexShrink: 0,
+            }}>U</div>
+            <div style={{ minWidth: 0 }}>
+              <div className="h-display" style={{ fontSize: 18, lineHeight: 1 }}>Holidays</div>
+              <div className="h-mono" style={{ fontSize: 10, color: 'var(--h-muted)', letterSpacing: '0.1em' }}>BITBOSS</div>
+            </div>
+          </Link>
+          <NotificationsBell align="left" />
+        </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
           {nav.map((item) => {
@@ -236,6 +241,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 <span style={{ fontSize: 12 }}>Admin</span>
               </Link>
             )}
+            <NotificationsBell compact />
             <Link
               href={route('logout')}
               method="post"

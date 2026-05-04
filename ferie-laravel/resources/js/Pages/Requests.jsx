@@ -7,7 +7,7 @@ import StatusBadge from '@/Components/h/StatusBadge';
 import RequestDetailSlideover from '@/Components/RequestDetailSlideover';
 import { fmtDate } from '@/lib/date';
 import { Head, router } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const STATUSES = [
     { key: 'ALL', label: 'Tutte' },
@@ -29,6 +29,15 @@ export default function RequestsPage({ isAdmin, requests, leaveTypes, filters })
     const [selected, setSelected] = useState(null);
     const [search, setSearch] = useState(filters?.q ?? '');
     const [filtersOpen, setFiltersOpen] = useState(false);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const params = new URLSearchParams(window.location.search);
+        const requested = params.get('request');
+        if (!requested) return;
+        const match = requests.find((r) => String(r.id) === String(requested));
+        if (match) setSelected(match);
+    }, [requests]);
 
     const activeStatus = filters?.status || 'ALL';
     const activeType = filters?.type || 'ALL';

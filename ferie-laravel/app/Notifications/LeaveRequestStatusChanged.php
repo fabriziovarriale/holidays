@@ -13,10 +13,10 @@ class LeaveRequestStatusChanged extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
-    public function toMail(object $notifiable): MailMessage
+    private function context(): array
     {
         $req = $this->leaveRequest;
         $isApproved = $req->status === 'APPROVED';
@@ -36,6 +36,39 @@ class LeaveRequestStatusChanged extends Notification
         $units = $req->leave_type_code === 'PERMESSO'
             ? "{$req->requested_units} ore"
             : "{$req->requested_units} ".($req->requested_units === 1 ? 'giorno' : 'giorni');
+
+        return compact('isApproved', 'typeLabel', 'period', 'units');
+    }
+
+    public function toArray(object $notifiable): array
+    {
+        $req = $this->leaveRequest;
+        $ctx = $this->context();
+        $statusLabel = $ctx['isApproved'] ? 'approvata' : 'rifiutata';
+
+        return [
+            'type'             => 'leave_request_status_changed',
+            'leave_request_id' => $req->id,
+            'status'           => $req->status,
+            'leave_type_code'  => $req->leave_type_code,
+            'leave_type_label' => $ctx['typeLabel'],
+            'period'           => $ctx['period'],
+            'units'            => $ctx['units'],
+            'note_admin'       => $req->note_admin,
+            'title'            => "Richiesta di {$ctx['typeLabel']} {$statusLabel}",
+            'message'          => "{$ctx['period']} · {$ctx['units']}",
+            'url'              => '/requests?status=ALL&request='.$req->id,
+        ];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $req = $this->leaveRequest;
+        $ctx = $this->context();
+        $isApproved = $ctx['isApproved'];
+        $typeLabel = $ctx['typeLabel'];
+        $period = $ctx['period'];
+        $units = $ctx['units'];
 
         $statusLabel = $isApproved ? 'approvata ✓' : 'rifiutata ✗';
         $subject = $isApproved

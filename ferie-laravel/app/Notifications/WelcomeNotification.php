@@ -19,7 +19,21 @@ class WelcomeNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
+    }
+
+    public function toArray(object $notifiable): array
+    {
+        $name = trim(($this->user->first_name ?? '').' '.($this->user->last_name ?? ''))
+            ?: $this->user->email;
+
+        return [
+            'type'    => 'welcome',
+            'user_id' => $this->user->id,
+            'title'   => "Benvenuto su Ferie MVP, {$name}!",
+            'message' => 'Il tuo account è stato creato. Puoi richiedere ferie e consultare il tuo saldo.',
+            'url'     => '/dashboard',
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage
