@@ -10,6 +10,7 @@ const DATASETS = [
         label: 'Richieste dettagliate',
         description: "Una riga per richiesta. Utile per audit HR e gestione paghe.",
         columns: [
+            { key: 'id',              label: 'ID richiesta' },
             { key: 'dipendente',      label: 'Dipendente' },
             { key: 'email',           label: 'Email' },
             { key: 'ruolo',           label: 'Ruolo professionale' },
@@ -20,10 +21,11 @@ const DATASETS = [
             { key: 'quantita',        label: 'Quantità' },
             { key: 'stato',           label: 'Stato' },
             { key: 'inviata_il',      label: 'Data invio' },
-            { key: 'approvata_il',    label: 'Data decisione' },
+            { key: 'decisione_il',    label: 'Data decisione' },
             { key: 'nota_dipendente', label: 'Nota dipendente' },
             { key: 'nota_admin',      label: 'Nota admin' },
             { key: 'allegato',        label: 'Allegato (sì/no)' },
+            { key: 'nome_allegato',   label: 'Nome allegato' },
             { key: 'puc',             label: 'PUC malattia' },
         ],
         supportsStatusTypeFilters: true,
@@ -64,11 +66,10 @@ const STATUSES = [
     { value: 'CANCELLED', label: 'Annullate' },
 ];
 
-const TYPES = [
+const FALLBACK_TYPES = [
     { value: 'FERIE',    label: 'Ferie' },
-    { value: 'PERMESSO', label: 'Permessi' },
     { value: 'MALATTIA', label: 'Malattia' },
-    { value: 'ROL',      label: 'ROL' },
+    { value: 'PERMESSO', label: 'Permesso' },
 ];
 
 function Check({ id, checked, onChange, children }) {
@@ -100,8 +101,9 @@ function Check({ id, checked, onChange, children }) {
     );
 }
 
-export default function ExportCsvSlideover({ show, onClose, defaultYear }) {
+export default function ExportCsvSlideover({ show, onClose, defaultYear, leaveTypes }) {
     const currentYear = defaultYear ?? new Date().getFullYear();
+    const TYPES = leaveTypes && leaveTypes.length > 0 ? leaveTypes : FALLBACK_TYPES;
 
     const [dataset, setDatasetValue] = useState('richieste');
     const [year, setYear] = useState(currentYear);

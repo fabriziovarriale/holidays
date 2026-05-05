@@ -14,6 +14,7 @@ class ReportController extends Controller
 {
     private const DATASET_COLUMNS = [
         'richieste' => [
+            'id'              => 'ID richiesta',
             'dipendente'      => 'Dipendente',
             'email'           => 'Email',
             'ruolo'           => 'Ruolo professionale',
@@ -24,10 +25,11 @@ class ReportController extends Controller
             'quantita'        => 'Quantità',
             'stato'           => 'Stato',
             'inviata_il'      => 'Data invio',
-            'approvata_il'    => 'Data decisione',
+            'decisione_il'    => 'Data decisione',
             'nota_dipendente' => 'Nota dipendente',
             'nota_admin'      => 'Nota admin',
             'allegato'        => 'Allegato',
+            'nome_allegato'   => 'Nome allegato',
             'puc'             => 'PUC malattia',
         ],
         'saldi' => [
@@ -117,6 +119,7 @@ class ReportController extends Controller
     private function richiestaValue(string $col, LeaveRequest $req): string
     {
         return match ($col) {
+            'id'         => (string) $req->id,
             'dipendente' => $req->user
                 ? (trim(($req->user->first_name ?? '').' '.($req->user->last_name ?? '')) ?: ($req->user->name ?? ''))
                 : '',
@@ -124,17 +127,18 @@ class ReportController extends Controller
             'ruolo'           => (string) ($req->user?->job_role ?? ''),
             'tipo'            => (string) ($req->leaveType?->description ?? $req->leave_type_code),
             'inizio'          => (string) $req->start_date?->toDateString(),
-            'fine'             => (string) $req->end_date?->toDateString(),
+            'fine'            => (string) $req->end_date?->toDateString(),
             'unita'           => (string) ($req->leaveType?->unit ?? 'days'),
             'quantita'        => (string) ($req->approved_days ?? $req->requested_units),
             'stato'           => (string) $req->status,
             'inviata_il'      => (string) ($req->created_at?->toDateTimeString() ?? ''),
-            'approvata_il'    => (string) (in_array($req->status, ['APPROVED', 'REJECTED'], true)
+            'decisione_il'    => (string) (in_array($req->status, ['APPROVED', 'REJECTED', 'CANCELLED'], true)
                 ? ($req->updated_at?->toDateTimeString() ?? '')
                 : ''),
             'nota_dipendente' => (string) ($req->note_user ?? ''),
             'nota_admin'      => (string) ($req->note_admin ?? ''),
             'allegato'        => $req->attachment_path ? 'sì' : 'no',
+            'nome_allegato'   => (string) ($req->attachment_original_name ?? ''),
             'puc'             => (string) ($req->sick_certificate_puc ?? ''),
             default           => '',
         };

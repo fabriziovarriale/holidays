@@ -210,6 +210,26 @@ class DashboardController extends Controller
                 'lastPage' => $rejectedPaginator->lastPage(),
                 'total' => $rejectedPaginator->total(),
             ];
+
+            $today = now()->startOfDay();
+            $data['todayOff'] = LeaveRequest::query()
+                ->with(['user', 'leaveType'])
+                ->where('status', 'APPROVED')
+                ->where('start_date', '<=', $today->toDateString())
+                ->where('end_date', '>=', $today->toDateString())
+                ->orderBy('start_date')
+                ->get()
+                ->map(fn (LeaveRequest $r) => [
+                    'id' => (string) $r->id,
+                    'userFullName' => $r->user
+                        ? trim(($r->user->first_name ?? '').' '.($r->user->last_name ?? '')) ?: $r->user->email
+                        : 'Dipendente',
+                    'userJobRole' => $r->user?->job_role,
+                    'leaveType' => $r->leave_type_code,
+                    'returnsOn' => $r->end_date?->copy()->addDay()->format('Y-m-d'),
+                ])
+                ->values()
+                ->all();
         }
 
         return Inertia::render('Dashboard', $data);

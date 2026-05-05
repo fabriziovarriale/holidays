@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\WorkingDays;
 use App\Http\Controllers\Controller;
+use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
+use App\Models\LeaveType;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -42,8 +46,6 @@ class ReportsPageController extends Controller
 
         $monthly = array_fill(0, 12, ['ferie' => 0, 'malattia' => 0, 'permesso' => 0]);
 
-        $byRole = [];
-
         foreach ($approved as $r) {
             $month = (int) $r->start_date->format('n') - 1;
             $unit = $r->leaveType?->unit ?? 'days';
@@ -52,12 +54,6 @@ class ReportsPageController extends Controller
             if ($r->leave_type_code === 'FERIE') {
                 $totalFerieDays += $qty;
                 $monthly[$month]['ferie'] += $qty;
-
-                $role = $r->user?->job_role ?: 'Altro';
-                if (! isset($byRole[$role])) {
-                    $byRole[$role] = 0;
-                }
-                $byRole[$role] += $qty;
             } elseif ($r->leave_type_code === 'MALATTIA') {
                 $totalMalattiaDays += $qty;
                 $monthly[$month]['malattia'] += $qty;
@@ -81,15 +77,51 @@ class ReportsPageController extends Controller
             'permesso' => $monthly[$m]['permesso'],
         ])->values()->all();
 
-        $roleBreakdown = collect($byRole)
-            ->map(fn ($days, $role) => ['role' => $role, 'days' => $days])
-            ->sortByDesc('days')
+        $activeEmployeesCollection = User::where('active', true)
+            ->where('role', '!=', 'admin')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+        $activeEmployees = $activeEmployeesCollection->count();
+
+        $today = now()->startOfDay();
+        $absenceRate = [
+            'daily'   => $this->computeAbsenceRate($today, $today, $activeEmployees),
+            'weekly'  => $this->computeAbsenceRate(now()->startOfWeek(), now()->endOfWeek(), $activeEmployees),
+            'monthly' => $this->computeAbsenceRate(now()->startOfMonth(), now()->endOfMonth(), $activeEmployees),
+        ];
+
+        $outToday = LeaveRequest::query()
+            ->where('status', 'APPROVED')
+            ->whereIn('leave_type_code', ['FERIE', 'MALATTIA'])
+            ->where('start_date', '<=', $today->toDateString())
+            ->where('end_date',   '>=', $today->toDateString())
+            ->distinct('user_id')
+            ->count('user_id');
+        $inOfficeToday = max(0, $activeEmployees - $outToday);
+
+        $balances = LeaveBalance::whereIn('user_id', $activeEmployeesCollection->pluck('id'))
+            ->where('year', $year)
+            ->get()
+            ->keyBy('user_id');
+        $usedByUser = LeaveRequest::sumDeductibleApprovedDaysByUserForYear($year);
+
+        $remainingByEmployee = $activeEmployeesCollection
+            ->map(function (User $u) use ($balances, $usedByUser) {
+                $allocated = (int) ($balances->get($u->id)?->allocated_days ?? 0);
+                $used      = (int) $usedByUser->get($u->id, 0);
+                return [
+                    'id'        => (string) $u->id,
+                    'name'      => trim(($u->first_name ?? '').' '.($u->last_name ?? '')) ?: ($u->email ?? 'Dipendente'),
+                    'role'      => $u->job_role ?: '—',
+                    'allocated' => $allocated,
+                    'used'      => $used,
+                    'remaining' => max(0, $allocated - $used),
+                ];
+            })
+            ->sortBy('remaining')
             ->values()
             ->all();
-
-        $activeEmployees = User::where('active', true)
-            ->where('role', '!=', 'admin')
-            ->count();
 
         $activity = LeaveRequest::query()
             ->with(['user', 'leaveType'])
@@ -131,8 +163,19 @@ class ReportsPageController extends Controller
             ->values()
             ->all();
 
+        $leaveTypesForExport = LeaveType::where('active', true)
+            ->orderBy('code')
+            ->get()
+            ->map(fn ($lt) => [
+                'value' => $lt->code,
+                'label' => $lt->description,
+            ])
+            ->values()
+            ->all();
+
         return Inertia::render('Reports', [
             'year' => $year,
+            'leaveTypesForExport' => $leaveTypesForExport,
             'stats' => [
                 'approvedCount' => $approved->count(),
                 'pendingCount' => $pending,
@@ -142,10 +185,52 @@ class ReportsPageController extends Controller
                 'permessoHours' => $totalPermessoHours,
                 'approvalRate' => $approvalRate,
                 'activeEmployees' => $activeEmployees,
+                'inOfficeToday' => $inOfficeToday,
+                'outToday' => $outToday,
             ],
             'monthly' => $months,
-            'roleBreakdown' => $roleBreakdown,
+            'absenceRate' => $absenceRate,
+            'remainingByEmployee' => $remainingByEmployee,
             'activity' => $activity,
         ]);
+    }
+
+    private function computeAbsenceRate(Carbon $from, Carbon $to, int $activeEmployees): array
+    {
+        if ($activeEmployees === 0) {
+            return ['rate' => 0.0, 'absentDays' => 0, 'totalDays' => 0];
+        }
+
+        $from = $from->copy()->startOfDay();
+        $to   = $to->copy()->startOfDay();
+
+        $workingDaysInPeriod = WorkingDays::between($from->toDateString(), $to->toDateString());
+        $totalDays = $activeEmployees * $workingDaysInPeriod;
+
+        if ($totalDays === 0) {
+            return ['rate' => 0.0, 'absentDays' => 0, 'totalDays' => 0];
+        }
+
+        $requests = LeaveRequest::query()
+            ->where('status', 'APPROVED')
+            ->whereIn('leave_type_code', ['FERIE', 'MALATTIA'])
+            ->where('start_date', '<=', $to->toDateString())
+            ->where('end_date',   '>=', $from->toDateString())
+            ->get(['user_id', 'start_date', 'end_date']);
+
+        $absentDays = 0;
+        foreach ($requests as $r) {
+            $start = $r->start_date->lt($from) ? $from : $r->start_date->copy()->startOfDay();
+            $end   = $r->end_date->gt($to)     ? $to   : $r->end_date->copy()->startOfDay();
+            $absentDays += WorkingDays::between($start->toDateString(), $end->toDateString());
+        }
+
+        $rate = ($absentDays / $totalDays) * 100;
+
+        return [
+            'rate'       => round($rate, 1),
+            'absentDays' => $absentDays,
+            'totalDays'  => $totalDays,
+        ];
     }
 }

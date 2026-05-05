@@ -6,7 +6,7 @@
         "build": "vite build",
         "dev": "cross-env LARAVEL_BYPASS_ENV_CHECK=1 vite",
         "dev:watch": "vite build --watch",
-        "start": "concurrently -n laravel,vite -c blue,green \"php artisan serve\" \"npm run dev\""
+        "start": "concurrently -n laravel,vite,queue -c blue,green,magenta \"php artisan serve\" \"npm run dev\" \"php artisan queue:listen --tries=1\""
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",

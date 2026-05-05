@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Models\User;
@@ -75,20 +76,79 @@ class RequestsController extends Controller
             ->values()
             ->all();
 
-        $leaveTypes = LeaveType::where('active', true)
+        $leaveTypesFull = LeaveType::where('active', true)
             ->orderBy('code')
-            ->get()
+            ->get();
+
+        $leaveTypes = $leaveTypesFull
             ->map(fn ($lt) => [
                 'code' => $lt->code,
                 'label' => $lt->description,
+                'deductsBalance' => $lt->deducts_balance,
+                'unit' => $lt->unit,
+                'requiresAttachment' => (bool) $lt->requires_attachment,
+                'maxConsecutiveDays' => $lt->max_consecutive_days !== null ? (int) $lt->max_consecutive_days : null,
+                'noticeDaysRequired' => (int) ($lt->notice_days_required ?? 0),
             ])
             ->values()
             ->all();
+
+        $leaveStoreYear = (int) now()->year;
+        $balanceLeaveStore = LeaveBalance::where('user_id', $user->id)
+            ->where('year', $leaveStoreYear)
+            ->first();
+        $usedLeaveStoreYear = (int) LeaveRequest::sumDeductibleApprovedDaysByUserForYear($leaveStoreYear)
+            ->get($user->id, 0);
+        $employeeBalanceForLeaveStore = $balanceLeaveStore ? [
+            'total' => (int) $balanceLeaveStore->allocated_days,
+            'used' => $usedLeaveStoreYear,
+            'remaining' => max(0, (int) $balanceLeaveStore->allocated_days - $usedLeaveStoreYear),
+        ] : null;
+
+        $employees = [];
+        $employeesWithBalances = [];
+        if ($isAdmin) {
+            $employeesCollection = User::where('active', true)
+                ->where('role', '!=', 'admin')
+                ->orderBy('last_name')
+                ->orderBy('first_name')
+                ->get();
+
+            $employees = $employeesCollection->map(fn ($u) => [
+                'id' => (string) $u->id,
+                'label' => trim(($u->first_name ?? '').' '.($u->last_name ?? '')) ?: $u->email,
+                'firstName' => $u->first_name ?? '',
+                'lastName' => $u->last_name ?? '',
+                'role' => $u->role ?? 'user',
+            ])->values()->all();
+
+            $balances = LeaveBalance::whereIn('user_id', $employeesCollection->pluck('id'))
+                ->where('year', $leaveStoreYear)
+                ->get()
+                ->keyBy('user_id');
+            $approvedUsedDaysByUser = LeaveRequest::sumDeductibleApprovedDaysByUserForYear($leaveStoreYear);
+
+            $employeesWithBalances = $employeesCollection->mapWithKeys(function ($u) use ($balances, $approvedUsedDaysByUser) {
+                $allocated = (int) ($balances->get($u->id)?->allocated_days ?? 0);
+                $used = (int) $approvedUsedDaysByUser->get($u->id, 0);
+                return [
+                    (string) $u->id => [
+                        'total' => $allocated,
+                        'used' => $used,
+                        'remaining' => max(0, $allocated - $used),
+                    ],
+                ];
+            })->all();
+        }
 
         return Inertia::render('Requests', [
             'isAdmin' => $isAdmin,
             'requests' => $requests,
             'leaveTypes' => $leaveTypes,
+            'employeeBalanceForLeaveStore' => $employeeBalanceForLeaveStore,
+            'leaveStoreYear' => $leaveStoreYear,
+            'employees' => $employees,
+            'employeesWithBalances' => $employeesWithBalances,
             'filters' => [
                 'status' => $status,
                 'type' => $type,

@@ -4,9 +4,10 @@ import Icon from '@/Components/h/Icon';
 import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
 import Select from '@/Components/h/Select';
 import StatusBadge from '@/Components/h/StatusBadge';
+import CreateRequestSlideover from '@/Components/CreateRequestSlideover';
 import RequestDetailSlideover from '@/Components/RequestDetailSlideover';
 import { fmtDate } from '@/lib/date';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 
 const STATUSES = [
@@ -25,10 +26,25 @@ function initialsOf(fullName) {
     return (a + b) || '—';
 }
 
-export default function RequestsPage({ isAdmin, requests, leaveTypes, filters }) {
+export default function RequestsPage({
+    isAdmin,
+    requests,
+    leaveTypes,
+    employeeBalanceForLeaveStore = null,
+    leaveStoreYear = new Date().getFullYear(),
+    employees = [],
+    employeesWithBalances = {},
+    filters,
+}) {
+    const { errors = {} } = usePage().props;
     const [selected, setSelected] = useState(null);
     const [search, setSearch] = useState(filters?.q ?? '');
     const [filtersOpen, setFiltersOpen] = useState(false);
+    const [createOpen, setCreateOpen] = useState(false);
+
+    const hasLeaveErrors = ['leaveType', 'startDate', 'endDate', 'requestedUnits', 'note', 'userId']
+        .some((k) => errors?.[k]);
+    useEffect(() => { if (hasLeaveErrors) setCreateOpen(true); }, [hasLeaveErrors]);
 
     useEffect(() => {
         const requested = filters?.request;
@@ -85,6 +101,11 @@ export default function RequestsPage({ isAdmin, requests, leaveTypes, filters })
                         <h1 className="h-display" style={{ fontSize: 44, marginTop: 4 }}>
                             Richieste.
                         </h1>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                        <Button variant="primary" onClick={() => setCreateOpen(true)}>
+                            <Icon name="plus" size={16} /> Nuova richiesta
+                        </Button>
                     </div>
                 </div>
             }
@@ -369,6 +390,19 @@ export default function RequestsPage({ isAdmin, requests, leaveTypes, filters })
                 show={Boolean(selected)}
                 onClose={() => setSelected(null)}
                 variant={isAdmin ? 'admin' : 'employee'}
+            />
+
+            <CreateRequestSlideover
+                show={createOpen}
+                onClose={() => setCreateOpen(false)}
+                leaveTypes={leaveTypes}
+                employeeBalance={employeeBalanceForLeaveStore}
+                employeeBalanceForLeaveStore={employeeBalanceForLeaveStore}
+                leaveStoreYear={leaveStoreYear}
+                employees={employees}
+                employeesWithBalances={employeesWithBalances}
+                isAdmin={isAdmin}
+                errors={errors}
             />
         </AuthenticatedLayout>
     );

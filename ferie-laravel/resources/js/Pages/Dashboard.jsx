@@ -1,13 +1,10 @@
 import { Head, usePage, router } from '@inertiajs/react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/h/Icon';
-import Button from '@/Components/h/Button';
 import StatusBadge from '@/Components/h/StatusBadge';
 import LeaveTypeTag from '@/Components/h/LeaveTypeTag';
-import StatCard from '@/Components/h/StatCard';
 import BalanceRing from '@/Components/h/BalanceRing';
-import CreateRequestSlideover from '@/Components/CreateRequestSlideover';
 import RequestDetailSlideover from '@/Components/RequestDetailSlideover';
 import ConfirmDialog from '@/Components/ConfirmDialog';
 import ApprovedLeaveImpactCalendar from '@/Components/ApprovedLeaveImpactCalendar';
@@ -31,14 +28,10 @@ export default function Dashboard({
   approvedMeta = null,
   rejectedRequests = [],
   rejectedMeta = null,
+  todayOff = [],
 }) {
-  const { errors = {}, flash = {}, auth } = usePage().props;
+  const { flash = {}, auth } = usePage().props;
   const pageUser = auth?.user ?? user;
-  const [createOpen, setCreateOpen] = useState(false);
-
-  const hasLeaveErrors = ['leaveType', 'startDate', 'endDate', 'requestedUnits', 'note', 'userId']
-    .some((k) => errors?.[k]);
-  useEffect(() => { if (hasLeaveErrors) setCreateOpen(true); }, [hasLeaveErrors]);
 
   return (
     <AuthenticatedLayout
@@ -53,11 +46,6 @@ export default function Dashboard({
                 ? 'team'
                 : (pageUser?.first_name || pageUser?.name?.split(' ')?.[0] || 'dipendente')}.
             </h1>
-          </div>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <Button variant="primary" onClick={() => setCreateOpen(true)}>
-              <Icon name="plus" size={16} /> Nuova richiesta
-            </Button>
           </div>
         </div>
       }
@@ -78,6 +66,7 @@ export default function Dashboard({
             rejectedRequests={rejectedRequests}
             rejectedMeta={rejectedMeta}
             employeesWithBalances={employeesWithBalances}
+            todayOff={todayOff}
           />
         : <EmployeeView
             balance={employeeBalance}
@@ -89,18 +78,6 @@ export default function Dashboard({
         <ApprovedLeaveImpactCalendar approvedEntries={approvedLeaveCalendar} holidays={companyHolidays} />
       </div>
 
-      <CreateRequestSlideover
-        show={createOpen}
-        onClose={() => setCreateOpen(false)}
-        leaveTypes={leaveTypes}
-        employeeBalance={employeeBalance}
-        employeeBalanceForLeaveStore={employeeBalanceForLeaveStore}
-        leaveStoreYear={leaveStoreYear}
-        employees={employees}
-        employeesWithBalances={employeesWithBalances}
-        isAdmin={isAdmin}
-        errors={errors}
-      />
     </AuthenticatedLayout>
   );
 }
@@ -372,32 +349,65 @@ function DateChip({ date }) {
 
 /* —————————————————————————————————————————————— ADMIN VIEW */
 
-function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRequests, rejectedMeta, employeesWithBalances }) {
+function AdminView({ pendingRequests, approvedRequests, approvedMeta, rejectedRequests, rejectedMeta, employeesWithBalances, todayOff = [] }) {
   const [detail, setDetail] = useState(null);
 
-  const employeesCount = Object.keys(employeesWithBalances || {}).length || 8;
-  const today = new Date();
-  const outToday = (pendingRequests.concat(approvedRequests))
-    .filter((r) => r.status === 'APPROVED' &&
-      new Date(r.startDate) <= today && new Date(r.endDate) >= today).length;
-
-  const approved = approvedMeta?.total ?? approvedRequests.length;
-  const rejected = rejectedMeta?.total ?? rejectedRequests.length;
-  const totalDecided = approved + rejected;
-  const approvalRate = totalDecided > 0 ? Math.round((approved / totalDecided) * 100) : 100;
+  const someoneOut = todayOff.length > 0;
 
   return (
     <div style={{ display: 'grid', gap: 18 }}>
-      {/* StatCards — su mobile mostriamo solo In attesa e Oggi in ufficio */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
-        <StatCard label="IN ATTESA"     value={pendingRequests.length} tone="yellow" />
-        <StatCard label="OGGI IN UFFICIO" value={`${Math.max(0, employeesCount - outToday)}/${employeesCount}`} tone="mint" />
-        <div className="h-desktop-only">
-          <StatCard label="APPROVATE ANNO" value={approved} />
+      {/* Oggi fuori ufficio — banner evidenziato */}
+      <section
+        className="h-card"
+        style={{
+          padding: 22,
+          background: someoneOut ? 'var(--h-yellow)' : 'var(--h-mint)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: someoneOut ? 14 : 0, gap: 10, flexWrap: 'wrap' }}>
+          <h3 className="h-heading" style={{ fontSize: 18 }}>
+            {someoneOut ? 'Oggi fuori ufficio' : 'Oggi tutti in ufficio'}
+          </h3>
+          {someoneOut && (
+            <div className="h-mono" style={{ fontSize: 11 }}>
+              {todayOff.length} {todayOff.length === 1 ? 'persona' : 'persone'}
+            </div>
+          )}
         </div>
-        <div className="h-desktop-only">
-          <StatCard label="TASSO APPROVAZIONE" value={`${approvalRate}%`} tone="coral" />
-        </div>
+
+        {someoneOut && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
+            {todayOff.map((r) => {
+              const parts = (r.userFullName || '').split(' ');
+              const initials = `${(parts[0]?.[0] || '').toUpperCase()}${(parts[1]?.[0] || '').toUpperCase()}` || '—';
+              return (
+                <div
+                  key={r.id}
+                  style={{
+                    border: 'var(--h-bw) solid var(--h-line)',
+                    borderRadius: 'var(--h-radius)',
+                    padding: 12,
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'center',
+                    background: 'var(--h-surface)',
+                  }}
+                >
+                  <span className="h-avatar">{initials}</span>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {r.userFullName}
+                    </div>
+                    <div className="h-muted" style={{ fontSize: 11, display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <LeaveTypeTag code={r.leaveType} />
+                      <span>· rientra {fmtDate(r.returnsOn)}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* Pending queue */}

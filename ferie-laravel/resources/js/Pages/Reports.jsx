@@ -32,16 +32,53 @@ const ACTIVITY_COLOR = {
     pending: 'var(--h-yellow)',
 };
 
-export default function ReportsPage({ year, stats, monthly, roleBreakdown, activity = [] }) {
+function AbsenceRow({ label, data }) {
+    const rate = Math.max(0, Math.min(100, data?.rate ?? 0));
+    const high = rate >= 30;
+    const medium = rate >= 15 && rate < 30;
+    const color = high ? 'var(--h-rose)' : medium ? 'var(--h-yellow)' : 'var(--h-mint)';
+    return (
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 13, marginBottom: 4 }}>
+                <b>{label}</b>
+                <span className="h-mono" style={{ fontSize: 14 }}>{rate.toFixed(1)}%</span>
+            </div>
+            <div className="h-bar" style={{ height: 12 }}>
+                <div
+                    style={{
+                        width: `${rate}%`,
+                        height: '100%',
+                        background: color,
+                    }}
+                />
+            </div>
+            {data?.totalDays > 0 && (
+                <div className="h-muted h-mono" style={{ fontSize: 10, marginTop: 3, letterSpacing: '0.04em' }}>
+                    {data.absentDays}/{data.totalDays} giorni-persona
+                </div>
+            )}
+        </div>
+    );
+}
+
+export default function ReportsPage({
+    year,
+    stats,
+    monthly,
+    absenceRate = { daily: { rate: 0 }, weekly: { rate: 0 }, monthly: { rate: 0 } },
+    remainingByEmployee = [],
+    leaveTypesForExport = [],
+    activity = [],
+}) {
     const [exportOpen, setExportOpen] = useState(false);
     const maxMonthly = useMemo(
         () => Math.max(1, ...monthly.map((m) => m.ferie + m.malattia)),
         [monthly]
     );
 
-    const topRoleDays = useMemo(
-        () => Math.max(1, ...roleBreakdown.map((r) => r.days)),
-        [roleBreakdown]
+    const maxRemaining = useMemo(
+        () => Math.max(1, ...remainingByEmployee.map((e) => e.allocated || 0)),
+        [remainingByEmployee]
     );
 
     const changeYear = (newYear) =>
@@ -108,6 +145,12 @@ export default function ReportsPage({ year, stats, monthly, roleBreakdown, activ
                         value={stats.pendingCount}
                         hint="da decidere"
                         tone="yellow"
+                    />
+                    <StatCard
+                        label="Oggi in ufficio"
+                        value={`${stats.inOfficeToday ?? stats.activeEmployees}/${stats.activeEmployees}`}
+                        hint={stats.outToday > 0 ? `${stats.outToday} fuori` : 'tutti presenti'}
+                        tone="coral"
                     />
                 </div>
 
@@ -229,40 +272,91 @@ export default function ReportsPage({ year, stats, monthly, roleBreakdown, activ
                     </section>
 
                     <section className="h-card" style={{ padding: 22 }}>
-                        <h3 className="h-heading" style={{ fontSize: 16, marginBottom: 14 }}>
-                            Ferie per ruolo
-                        </h3>
-                        {roleBreakdown.length === 0 ? (
-                            <div className="h-muted" style={{ fontSize: 13 }}>
-                                Nessuna ferie approvata in questo anno.
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 14 }}>
+                            <div className="h-mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--h-muted)' }}>
+                                OPERATIVITÀ
                             </div>
-                        ) : (
-                            <div style={{ display: 'grid', gap: 12 }}>
-                                {roleBreakdown.map((r) => {
-                                    const pct = Math.min(1, r.days / topRoleDays);
-                                    return (
-                                        <div key={r.role}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
-                                                <b>{r.role}</b>
-                                                <span className="h-mono">{r.days}g</span>
-                                            </div>
-                                            <div className="h-bar" style={{ height: 14 }}>
-                                                <div
-                                                    style={{
-                                                        width: `${pct * 100}%`,
-                                                        height: '100%',
-                                                        background: 'var(--h-coral)',
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                            <h3 className="h-heading" style={{ fontSize: 16 }}>
+                                Tasso di assenza
+                            </h3>
+                            <div className="h-muted" style={{ fontSize: 11 }}>
+                                % capacità persa per ferie + malattia approvate
                             </div>
-                        )}
-
+                        </div>
+                        <div style={{ display: 'grid', gap: 14 }}>
+                            <AbsenceRow label="Oggi"        data={absenceRate.daily} />
+                            <AbsenceRow label="Questa settimana" data={absenceRate.weekly} />
+                            <AbsenceRow label="Questo mese" data={absenceRate.monthly} />
+                        </div>
                     </section>
                 </div>
+
+                <section className="h-card" style={{ padding: 22 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14, gap: 12, flexWrap: 'wrap' }}>
+                        <div>
+                            <div className="h-mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--h-muted)' }}>
+                                COMPLIANCE / HR
+                            </div>
+                            <h3 className="h-heading" style={{ fontSize: 16 }}>
+                                Ferie residue {year}
+                            </h3>
+                            <div className="h-muted" style={{ fontSize: 11 }}>
+                                Giorni di ferie ancora a disposizione, per dipendente — ordinati dal più basso al più alto.
+                            </div>
+                        </div>
+                    </div>
+
+                    {remainingByEmployee.length === 0 ? (
+                        <div className="h-muted" style={{ fontSize: 13 }}>
+                            Nessun dipendente attivo.
+                        </div>
+                    ) : (
+                        <div style={{ display: 'grid', gap: 10 }}>
+                            {remainingByEmployee.map((e) => {
+                                const allocated = e.allocated || 0;
+                                const usedPct = allocated > 0 ? Math.min(1, e.used / allocated) : 0;
+                                const remainingFraction = allocated > 0 ? e.remaining / allocated : 0;
+                                const lowStock = remainingFraction < 0.2 && allocated > 0;
+                                return (
+                                    <div key={e.id}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, fontSize: 13, marginBottom: 4 }}>
+                                            <div style={{ minWidth: 0, display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                                                <b style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.name}</b>
+                                                <span className="h-muted" style={{ fontSize: 11 }}>{e.role}</span>
+                                            </div>
+                                            <div className="h-mono" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+                                                <b style={{ color: lowStock ? 'var(--h-coral)' : 'inherit' }}>{e.remaining}g</b>
+                                                <span className="h-muted"> / {allocated}g</span>
+                                            </div>
+                                        </div>
+                                        <div className="h-bar" style={{ height: 10, position: 'relative' }}>
+                                            <div
+                                                style={{
+                                                    width: `${(allocated > 0 ? (allocated / maxRemaining) : 0) * 100}%`,
+                                                    height: '100%',
+                                                    background: 'var(--h-bg-2)',
+                                                    position: 'absolute',
+                                                    left: 0,
+                                                    top: 0,
+                                                }}
+                                            />
+                                            <div
+                                                style={{
+                                                    width: `${(allocated > 0 ? ((e.used / maxRemaining)) : 0) * 100}%`,
+                                                    height: '100%',
+                                                    background: lowStock ? 'var(--h-rose)' : 'var(--h-coral)',
+                                                    position: 'absolute',
+                                                    left: 0,
+                                                    top: 0,
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </section>
 
                 <section className="h-card" style={{ padding: 22 }}>
                     <h3 className="h-heading" style={{ fontSize: 16, marginBottom: 12 }}>
@@ -300,6 +394,7 @@ export default function ReportsPage({ year, stats, monthly, roleBreakdown, activ
                 show={exportOpen}
                 onClose={() => setExportOpen(false)}
                 defaultYear={year}
+                leaveTypes={leaveTypesForExport}
             />
         </AuthenticatedLayout>
     );
