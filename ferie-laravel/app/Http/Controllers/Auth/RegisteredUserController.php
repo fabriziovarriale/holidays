@@ -57,9 +57,10 @@ class RegisteredUserController extends Controller
             'job_role'   => $request->job_role,
             'email'      => $request->email,
             'password'   => Hash::make($request->password),
-            'role'       => 'user',
-            'active'     => true,
         ]);
+        $user->role = 'user';
+        $user->active = true;
+        $user->save();
 
         try {
             $user->notify(new WelcomeNotification($user, createdByAdmin: false));

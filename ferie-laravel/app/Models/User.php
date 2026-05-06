@@ -18,15 +18,18 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    /**
+     * NB: 'role' e 'active' sono volutamente esclusi dal fillable per
+     * evitare privilege-escalation via mass-assignment. Vanno settati
+     * con assegnazione esplicita ($u->role = ...; $u->save()).
+     */
     protected $fillable = [
         'name',
         'first_name',
         'last_name',
         'email',
         'password',
-        'role',
         'job_role',
-        'active',
     ];
 
     public function leaveRequests()

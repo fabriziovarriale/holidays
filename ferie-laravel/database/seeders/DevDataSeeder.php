@@ -27,18 +27,20 @@ class DevDataSeeder extends Seeder
 
         $users = [];
         foreach ($employees as $e) {
-            $users[] = User::updateOrCreate(
+            $u = User::updateOrCreate(
                 ['email' => $e['email']],
                 [
                     'first_name'        => $e['first_name'],
                     'last_name'         => $e['last_name'],
                     'job_role'          => $e['job_role'],
-                    'role'              => 'employee',
                     'password'          => Hash::make('password'),
                     'email_verified_at' => now(),
-                    'active'            => true,
                 ]
             );
+            $u->role = 'employee';
+            $u->active = true;
+            $u->save();
+            $users[] = $u;
         }
 
         // Saldo ferie (tabella letta da DashboardController / Admin\UsersController)

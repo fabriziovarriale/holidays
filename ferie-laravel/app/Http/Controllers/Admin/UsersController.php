@@ -67,10 +67,11 @@ class UsersController extends Controller
             'last_name' => $validated['lastName'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => 'user',
             'job_role' => $validated['jobRole'],
-            'active' => true,
         ]);
+        $user->role = 'user';
+        $user->active = true;
+        $user->save();
 
         try {
             $user->notify(new WelcomeNotification($user, createdByAdmin: true));

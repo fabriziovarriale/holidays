@@ -84,6 +84,31 @@ class ReportController extends Controller
         };
     }
 
+    /**
+     * Defuses formula injection (CSV injection / "Excel macro") by prefixing
+     * any cell whose first character would make a spreadsheet treat it as a
+     * formula. Single quote is the standard "this is text" hint that Excel /
+     * Numbers / LibreOffice all honor and strip on display.
+     */
+    private static function sanitizeCsvCell(string $value): string
+    {
+        if ($value === '') {
+            return $value;
+        }
+
+        $first = $value[0];
+        if (in_array($first, ['=', '+', '-', '@', "\t", "\r"], true)) {
+            return "'".$value;
+        }
+
+        return $value;
+    }
+
+    private static function safeFputcsv($file, array $row): void
+    {
+        fputcsv($file, array_map([self::class, 'sanitizeCsvCell'], $row));
+    }
+
     private function streamRichieste(int $year, array $cols, array $statuses, array $types, string $filename): StreamedResponse
     {
         $headers = array_map(fn ($c) => self::DATASET_COLUMNS['richieste'][$c], $cols);
@@ -108,7 +133,7 @@ class ReportController extends Controller
                         foreach ($cols as $col) {
                             $row[] = $this->richiestaValue($col, $req);
                         }
-                        fputcsv($file, $row);
+                        self::safeFputcsv($file, $row);
                     }
                 });
 
@@ -187,7 +212,7 @@ class ReportController extends Controller
                         default      => '',
                     };
                 }
-                fputcsv($file, $row);
+                self::safeFputcsv($file, $row);
             }
 
             fclose($file);
@@ -240,7 +265,7 @@ class ReportController extends Controller
                         default             => '',
                     };
                 }
-                fputcsv($file, $row);
+                self::safeFputcsv($file, $row);
             }
 
             fclose($file);
