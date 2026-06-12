@@ -17,7 +17,7 @@ Richieste di assenza **approvate** aggiornate nel periodo richiesto.
 
 | Nome | Obbligatorio | Tipo | Default | Note |
 |---|---|---|---|---|
-| `since` | sì | ISO-8601 | — | Limite inferiore (incluso) su `updated_at` |
+| `since` | sì | ISO-8601 | — | Limite inferiore **esclusivo** su `updated_at` (`> since`) |
 | `until` | no | ISO-8601 | `now` | Limite superiore (incluso) |
 | `types[]` | no | enum | tutti | Filtra tipo: `FERIE`, `MALATTIA`, `PERMESSO` |
 | `limit` | no | int | 500 | Max 1000 |

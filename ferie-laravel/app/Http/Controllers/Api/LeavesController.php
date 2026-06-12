@@ -14,14 +14,15 @@ class LeavesController extends Controller
     /**
      * GET /api/v1/leaves/approved
      *
-     * Restituisce le richieste di ferie/malattia/permesso APPROVATE
-     * aggiornate dopo `since`. Pensato per pull periodico dal gestionale
-     * (es. cron orario): ad ogni chiamata si passa `since = ultima sync`
-     * e si ottengono gli incrementi.
+     * Restituisce le richieste di ferie/malattia/permesso APPROVATE con
+     * `updated_at` STRETTAMENTE > since e <= until. La semi-apertura
+     * sull'estremo inferiore evita che il record di confine — quello con
+     * `updated_at` esattamente uguale al `next_since` salvato dal client
+     * dopo l'ultimo poll — venga restituito di nuovo al poll successivo.
      *
      * Query params:
      *   - since   (ISO-8601, obbligatorio): es. 2026-06-10T09:00:00Z
-     *   - until   (ISO-8601, opzionale, default: now): upper bound
+     *   - until   (ISO-8601, opzionale, default: now): upper bound (incluso)
      *   - types[] (opzionale): FERIE, MALATTIA, PERMESSO
      *   - limit   (opzionale, default 500, max 1000)
      */
@@ -48,7 +49,8 @@ class LeavesController extends Controller
         $query = LeaveRequest::query()
             ->with(['user', 'leaveType'])
             ->where('status', 'APPROVED')
-            ->whereBetween('updated_at', [$since, $until])
+            ->where('updated_at', '>', $since)
+            ->where('updated_at', '<=', $until)
             ->when($types, fn ($q) => $q->whereIn('leave_type_code', $types))
             ->orderBy('updated_at')
             ->limit($limit);
