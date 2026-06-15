@@ -154,6 +154,7 @@ class RequestsController extends Controller
                 'type' => $type,
                 'q' => $search,
                 'request' => $request->query('request'),
+                'create' => $request->boolean('create'),
             ],
         ]);
     }

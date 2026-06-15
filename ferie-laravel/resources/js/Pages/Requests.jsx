@@ -53,6 +53,12 @@ export default function RequestsPage({
         if (match) setSelected(match);
     }, [filters?.request, requests]);
 
+    // Apri lo slideover "Nuova richiesta" se atterriamo con ?create=1
+    // (es. CTA "Aggiungi richiesta" dal gestionale bbos).
+    useEffect(() => {
+        if (filters?.create) setCreateOpen(true);
+    }, [filters?.create]);
+
     const activeStatus = filters?.status || 'ALL';
     const activeType = filters?.type || 'ALL';
     const hasActiveFilter =
