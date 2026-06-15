@@ -13,6 +13,8 @@ class LeaveRequest extends Model
         'leave_type_code',
         'start_date',
         'end_date',
+        'start_time',
+        'end_time',
         'requested_units',
         'status',
         'note_user',
@@ -30,6 +32,8 @@ class LeaveRequest extends Model
         return [
             'start_date' => 'date',
             'end_date' => 'date',
+            'start_time' => 'datetime:H:i',
+            'end_time' => 'datetime:H:i',
             'requested_units' => 'integer',
             'attachment_size' => 'integer',
         ];

@@ -77,6 +77,8 @@ export default function LeaveRequestForm({
         leaveType: 'FERIE',
         startDate: initialStartDate ?? '',
         endDate: initialEndDate ?? '',
+        startTime: '',
+        endTime: '',
         requestedUnits: '0',
         attachment: null,
         sickCertificatePuc: '',
@@ -94,13 +96,15 @@ export default function LeaveRequestForm({
         transform((raw) => {
             const out = { ...raw };
             const lt = leaveTypesRef.current.find((l) => l.code === out.leaveType);
-            if (!lt || lt.unit !== 'hours') {
+            const isHourly = lt && lt.unit === 'hours';
+            if (!isHourly) {
                 out.requestedUnits = '0';
-            }
-            // PERMESSO: l'utente compila solo `Giorno` + `Ore`. endDate viene
-            // allineato a startDate prima di inviare al backend, così il
-            // record resta semanticamente "blocco di ore in quel giorno".
-            if (lt && lt.unit === 'hours') {
+                // Per FERIE/MALATTIA non inviare i time, restano null in DB.
+                out.startTime = '';
+                out.endTime = '';
+            } else {
+                // PERMESSO: l'utente compila solo `Giorno` + `Ore` + `Orario`.
+                // endDate viene allineato a startDate prima di inviare al backend.
                 out.endDate = out.startDate;
             }
             const { hasEmployees: he, isAdmin: ia, isAdminUser: iu } = flagsRef.current;
@@ -229,17 +233,29 @@ export default function LeaveRequestForm({
             </div>
 
             {selectedType?.unit === 'hours' && (
-                <div>
-                    <FieldLabel htmlFor="requestedUnits">Ore richieste</FieldLabel>
-                    <input
-                        id="requestedUnits"
-                        type="number"
-                        min={1}
-                        className="h-input h-mono"
-                        value={data.requestedUnits ?? ''}
-                        onChange={(e) => setData('requestedUnits', e.target.value)}
-                    />
-                    <FieldError message={errors.requestedUnits} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                        <FieldLabel htmlFor="startTime">Dalle</FieldLabel>
+                        <input
+                            id="startTime"
+                            type="time"
+                            className="h-input h-mono"
+                            value={data.startTime ?? ''}
+                            onChange={(e) => setData('startTime', e.target.value)}
+                        />
+                        <FieldError message={errors.startTime} />
+                    </div>
+                    <div>
+                        <FieldLabel htmlFor="endTime">Alle</FieldLabel>
+                        <input
+                            id="endTime"
+                            type="time"
+                            className="h-input h-mono"
+                            value={data.endTime ?? ''}
+                            onChange={(e) => setData('endTime', e.target.value)}
+                        />
+                        <FieldError message={errors.endTime} />
+                    </div>
                 </div>
             )}
 

@@ -20,6 +20,8 @@ Richieste di assenza **approvate** aggiornate nel periodo richiesto.
 | `since` | sì | ISO-8601 | — | Limite inferiore **esclusivo** su `updated_at` (`> since`) |
 | `until` | no | ISO-8601 | `now` | Limite superiore (incluso) |
 | `types[]` | no | enum | tutti | Filtra tipo: `FERIE`, `MALATTIA`, `PERMESSO` |
+
+Per i `PERMESSO`, oltre a `start_date` / `end_date` (uguali, è il giorno), sono valorizzati anche i campi `start_time` / `end_time` (`HH:MM`). Per FERIE e MALATTIA quei campi sono `null`. `requested_units` per PERMESSO è il numero di ore (derivato lato server da `end_time - start_time`).
 | `limit` | no | int | 500 | Max 1000 |
 
 **Risposta `200`**
@@ -35,6 +37,8 @@ Richieste di assenza **approvate** aggiornate nel periodo richiesto.
       "requested_units": 3,
       "start_date": "2026-05-01",
       "end_date": "2026-05-05",
+      "start_time": null,
+      "end_time": null,
       "note_user": null,
       "note_admin": null,
       "sick_certificate_puc": null,

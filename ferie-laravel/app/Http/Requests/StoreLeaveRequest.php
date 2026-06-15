@@ -22,14 +22,22 @@ class StoreLeaveRequest extends FormRequest
             'leaveType' => 'required|string|in:FERIE,MALATTIA,PERMESSO',
             'startDate' => 'required|date',
             // Per il PERMESSO il form invia solo `startDate` (giorno del permesso)
-            // e `requestedUnits` (ore). `endDate` viene normalizzato a `startDate`
-            // nel controller.
+            // + startTime/endTime (orario del blocco di assenza). `endDate`
+            // viene normalizzato a `startDate` nel controller.
             'endDate' => $isPermesso
                 ? 'nullable|date'
                 : 'required|date|after_or_equal:startDate',
-            'requestedUnits' => $isPermesso
-                ? 'required|integer|min:1'
-                : 'nullable|integer|min:0',
+            'startTime' => $isPermesso
+                ? 'required|date_format:H:i'
+                : 'nullable',
+            'endTime' => $isPermesso
+                ? 'required|date_format:H:i|after:startTime'
+                : 'nullable',
+            // Per PERMESSO le ore vengono calcolate in automatico dal
+            // controller come (endTime - startTime), quindi non sono più
+            // un input dell'utente. Tengo la regola nullable per non
+            // rompere chi inviasse comunque il campo (es. API esterne).
+            'requestedUnits' => 'nullable|integer|min:0',
             'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'sickCertificatePuc' => 'nullable|string|max:50',
             'note' => 'nullable|string|max:1000',
@@ -53,7 +61,11 @@ class StoreLeaveRequest extends FormRequest
             'endDate.required' => 'Inserisci data fine.',
             'endDate.date' => 'Data fine non valida.',
             'endDate.after_or_equal' => 'Data fine deve essere ≥ data inizio.',
-            'requestedUnits.required' => 'Inserisci il numero di ore.',
+            'startTime.required' => 'Inserisci l\'orario di inizio.',
+            'startTime.date_format' => 'Orario di inizio non valido (formato HH:MM).',
+            'endTime.required' => 'Inserisci l\'orario di fine.',
+            'endTime.date_format' => 'Orario di fine non valido (formato HH:MM).',
+            'endTime.after' => 'L\'orario di fine deve essere dopo l\'orario di inizio.',
             'leaveType.required' => 'Seleziona tipo assenza.',
             'leaveType.in' => 'Tipo assenza non valido. Valori ammessi: Ferie, Malattia, Permesso.',
             'requestedUnits.integer' => 'Ore non valide.',

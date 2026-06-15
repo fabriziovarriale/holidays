@@ -69,6 +69,9 @@ class LeavesController extends Controller
                 'requested_units' => (int) $r->requested_units,
                 'start_date'      => $r->start_date?->toDateString(),
                 'end_date'        => $r->end_date?->toDateString(),
+                // Time fields valorizzati solo per i PERMESSO (formato HH:MM).
+                'start_time'      => $r->start_time?->format('H:i'),
+                'end_time'        => $r->end_time?->format('H:i'),
                 'note_user'       => $r->note_user,
                 'note_admin'      => $r->note_admin,
                 'sick_certificate_puc' => $r->sick_certificate_puc,

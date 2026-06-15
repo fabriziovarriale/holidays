@@ -92,8 +92,20 @@ class LeaveRequestController extends Controller
                     ]);
                 }
             }
-        } elseif ($leaveType->unit === 'hours' && $requestedUnits < 1) {
-            return back()->withErrors(['requestedUnits' => 'Minimo 1 ora.']);
+        } elseif ($leaveType->unit === 'hours') {
+            // Per i tipi a ore (PERMESSO) le ore vengono dedotte da
+            // startTime / endTime invece di essere chieste all'utente.
+            $startTime = isset($validated['startTime']) ? Carbon::parse($validated['startTime']) : null;
+            $endTime   = isset($validated['endTime'])   ? Carbon::parse($validated['endTime'])   : null;
+            if ($startTime && $endTime) {
+                $minutes = $endTime->diffInMinutes($startTime);
+                $requestedUnits = (int) round($minutes / 60);
+            }
+            if ($requestedUnits < 1) {
+                return back()->withErrors([
+                    'endTime' => 'L\'orario di fine deve essere almeno 1 ora dopo l\'orario di inizio.',
+                ]);
+            }
         }
 
         if ($leaveType->requires_attachment && ! $request->hasFile('attachment')) {
@@ -126,6 +138,9 @@ class LeaveRequestController extends Controller
             'leave_type_code' => $validated['leaveType'],
             'start_date' => $start->toDateString(),
             'end_date' => $end->toDateString(),
+            // Time fields valorizzati solo per PERMESSO (vedi StoreLeaveRequest).
+            'start_time' => $validated['startTime'] ?? null,
+            'end_time'   => $validated['endTime']   ?? null,
             'requested_units' => $requestedUnits,
             'status' => 'PENDING',
             'note_user' => $validated['note'] ?? null,
