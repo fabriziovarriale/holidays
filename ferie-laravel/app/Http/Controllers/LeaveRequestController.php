@@ -95,10 +95,11 @@ class LeaveRequestController extends Controller
         } elseif ($leaveType->unit === 'hours') {
             // Per i tipi a ore (PERMESSO) le ore vengono dedotte da
             // startTime / endTime invece di essere chieste all'utente.
+            // abs() perché Carbon 3 ritorna diffInMinutes firmato.
             $startTime = isset($validated['startTime']) ? Carbon::parse($validated['startTime']) : null;
             $endTime   = isset($validated['endTime'])   ? Carbon::parse($validated['endTime'])   : null;
             if ($startTime && $endTime) {
-                $minutes = $endTime->diffInMinutes($startTime);
+                $minutes = (int) abs($startTime->diffInMinutes($endTime));
                 $requestedUnits = (int) round($minutes / 60);
             }
             if ($requestedUnits < 1) {
