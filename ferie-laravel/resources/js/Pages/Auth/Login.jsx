@@ -2,7 +2,7 @@ import Button from '@/Components/h/Button';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function Login({ status, canResetPassword }) {
+export default function Login({ status, canResetPassword, ssoBbosEnabled }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -33,6 +33,35 @@ export default function Login({ status, canResetPassword }) {
                     }}
                 >
                     {status}
+                </div>
+            )}
+
+            {ssoBbosEnabled && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
+                    <a
+                        href={route('sso.bbos.redirect')}
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                            padding: '10px 14px',
+                            border: '2px solid var(--h-line)',
+                            borderRadius: 'var(--h-radius)',
+                            background: 'var(--h-ink)',
+                            color: 'var(--h-paper, #fff)',
+                            fontSize: 13.5,
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                        }}
+                    >
+                        Accedi con bbos
+                    </a>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--h-muted, #888)', fontSize: 12 }}>
+                        <span style={{ flex: 1, height: 1, background: 'var(--h-line)' }} />
+                        <span>oppure</span>
+                        <span style={{ flex: 1, height: 1, background: 'var(--h-line)' }} />
+                    </div>
                 </div>
             )}
 

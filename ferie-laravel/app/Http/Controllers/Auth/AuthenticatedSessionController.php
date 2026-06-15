@@ -21,6 +21,11 @@ class AuthenticatedSessionController extends Controller
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
+            // Il bottone "Accedi con bbos" è attivo solo se l'integrazione
+            // SSO è configurata. Inferiamo lo stato dalla presenza di
+            // base_url + shared_secret nel config.
+            'ssoBbosEnabled' => filled(config('sso.bbos.base_url'))
+                && filled(config('sso.bbos.shared_secret')),
         ]);
     }
 
