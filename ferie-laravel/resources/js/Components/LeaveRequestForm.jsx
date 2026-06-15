@@ -97,6 +97,12 @@ export default function LeaveRequestForm({
             if (!lt || lt.unit !== 'hours') {
                 out.requestedUnits = '0';
             }
+            // PERMESSO: l'utente compila solo `Giorno` + `Ore`. endDate viene
+            // allineato a startDate prima di inviare al backend, così il
+            // record resta semanticamente "blocco di ore in quel giorno".
+            if (lt && lt.unit === 'hours') {
+                out.endDate = out.startDate;
+            }
             const { hasEmployees: he, isAdmin: ia, isAdminUser: iu } = flagsRef.current;
             if (!(he || ia || iu)) {
                 delete out.userId;
@@ -256,9 +262,17 @@ export default function LeaveRequestForm({
                 </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div
+                style={
+                    selectedType?.unit === 'hours'
+                        ? { display: 'grid', gridTemplateColumns: '1fr', gap: 10 }
+                        : { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }
+                }
+            >
                 <div>
-                    <FieldLabel htmlFor="startDate">Inizio</FieldLabel>
+                    <FieldLabel htmlFor="startDate">
+                        {selectedType?.unit === 'hours' ? 'Giorno' : 'Inizio'}
+                    </FieldLabel>
                     <DatePickerField
                         id="startDate"
                         value={data.startDate ?? ''}
@@ -270,17 +284,19 @@ export default function LeaveRequestForm({
                         <FieldError message={errors.startDate} />
                     )}
                 </div>
-                <div>
-                    <FieldLabel htmlFor="endDate">Fine</FieldLabel>
-                    <DatePickerField
-                        id="endDate"
-                        value={data.endDate ?? ''}
-                        onChange={(v) => setData('endDate', v)}
-                        minDate={parseYmdToLocalDate(data.startDate) ?? noticeMinStartDate}
-                        required
-                    />
-                    <FieldError message={errors.endDate} />
-                </div>
+                {selectedType?.unit !== 'hours' && (
+                    <div>
+                        <FieldLabel htmlFor="endDate">Fine</FieldLabel>
+                        <DatePickerField
+                            id="endDate"
+                            value={data.endDate ?? ''}
+                            onChange={(v) => setData('endDate', v)}
+                            minDate={parseYmdToLocalDate(data.startDate) ?? noticeMinStartDate}
+                            required
+                        />
+                        <FieldError message={errors.endDate} />
+                    </div>
+                )}
             </div>
 
             {showWorkingDaysCard && (

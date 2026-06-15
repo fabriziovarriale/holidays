@@ -32,7 +32,11 @@ class LeaveRequestController extends Controller
         }
 
         $start = Carbon::parse($validated['startDate'])->startOfDay();
-        $end = Carbon::parse($validated['endDate'])->startOfDay();
+        // PERMESSO: il form invia solo `startDate`. L'orario di assenza è
+        // un blocco di ore in quel giorno, quindi `endDate = startDate`.
+        $end = isset($validated['endDate']) && $validated['leaveType'] !== 'PERMESSO'
+            ? Carbon::parse($validated['endDate'])->startOfDay()
+            : $start->copy();
 
         if (in_array($validated['leaveType'], ['FERIE', 'PERMESSO'], true)
             && $this->periodOverlapsPendingOrApprovedSickLeave($targetUserId, $start, $end)) {
