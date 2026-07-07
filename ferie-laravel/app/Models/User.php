@@ -31,6 +31,7 @@ class User extends Authenticatable
         'email',
         'password',
         'job_role',
+        'bbos_id',
     ];
 
     public function leaveRequests()

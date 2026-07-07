@@ -61,15 +61,22 @@ export default function AuthenticatedLayout({ header, children }) {
         style={{
           borderRight: 'var(--h-bw) solid var(--h-line)',
           background: 'var(--h-surface)',
-          padding: '22px 16px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 16,
-          position: 'sticky',
-          top: 0,
-          height: '100vh',
+          minHeight: '100vh',
         }}
       >
+        {/* L'aside (bordo + sfondo) si estende fino in fondo alla pagina anche
+            se molto lunga; il wrapper sticky tiene la nav ancorata in alto. */}
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            height: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16,
+            padding: '22px 16px',
+          }}
+        >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit', flex: 1, minWidth: 0 }}>
             <div style={{
@@ -156,6 +163,7 @@ export default function AuthenticatedLayout({ header, children }) {
             <Icon name="logout" size={16} />
             <span>Esci</span>
           </Link>
+        </div>
         </div>
       </aside>
 

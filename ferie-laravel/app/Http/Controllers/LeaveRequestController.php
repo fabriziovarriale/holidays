@@ -192,8 +192,8 @@ class LeaveRequestController extends Controller
         $conflict = LeaveRequest::query()
             ->where('status', 'APPROVED')
             ->where('user_id', '!=', $userId)
-            ->where('start_date', '<=', $endDate)
-            ->where('end_date', '>=', $startDate)
+            ->whereDate('start_date', '<=', $endDate)
+            ->whereDate('end_date', '>=', $startDate)
             ->whereHas('user', fn ($q) => $q->where('job_role', $user->job_role)->where('active', true))
             ->with('user')
             ->first();

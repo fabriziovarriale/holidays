@@ -78,7 +78,6 @@ class ReportsPageController extends Controller
         ])->values()->all();
 
         $activeEmployeesCollection = User::where('active', true)
-            ->where('role', '!=', 'admin')
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
@@ -94,8 +93,8 @@ class ReportsPageController extends Controller
         $outToday = LeaveRequest::query()
             ->where('status', 'APPROVED')
             ->whereIn('leave_type_code', ['FERIE', 'MALATTIA'])
-            ->where('start_date', '<=', $today->toDateString())
-            ->where('end_date',   '>=', $today->toDateString())
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date',   '>=', $today)
             ->distinct('user_id')
             ->count('user_id');
         $inOfficeToday = max(0, $activeEmployees - $outToday);
@@ -214,8 +213,8 @@ class ReportsPageController extends Controller
         $requests = LeaveRequest::query()
             ->where('status', 'APPROVED')
             ->whereIn('leave_type_code', ['FERIE', 'MALATTIA'])
-            ->where('start_date', '<=', $to->toDateString())
-            ->where('end_date',   '>=', $from->toDateString())
+            ->whereDate('start_date', '<=', $to)
+            ->whereDate('end_date',   '>=', $from)
             ->get(['user_id', 'start_date', 'end_date']);
 
         $absentDays = 0;

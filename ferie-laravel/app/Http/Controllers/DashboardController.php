@@ -129,7 +129,6 @@ class DashboardController extends Controller
 
         if ($user->isAdmin()) {
             $employeesCollection = User::where('active', true)
-                ->where('role', '!=', 'admin')
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get();
@@ -215,8 +214,8 @@ class DashboardController extends Controller
             $data['todayOff'] = LeaveRequest::query()
                 ->with(['user', 'leaveType'])
                 ->where('status', 'APPROVED')
-                ->where('start_date', '<=', $today->toDateString())
-                ->where('end_date', '>=', $today->toDateString())
+                ->whereDate('start_date', '<=', $today)
+                ->whereDate('end_date', '>=', $today)
                 ->orderBy('start_date')
                 ->get()
                 ->map(fn (LeaveRequest $r) => [

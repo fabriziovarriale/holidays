@@ -77,6 +77,8 @@ class LeaveRequestSickOverlapTest extends TestCase
                 'leaveType' => 'PERMESSO',
                 'startDate' => '2026-06-10',
                 'endDate' => '2026-06-10',
+                'startTime' => '09:00',
+                'endTime' => '11:00',
                 'requestedUnits' => '2',
                 'note' => '',
             ])->assertSessionHasErrors(['startDate']);

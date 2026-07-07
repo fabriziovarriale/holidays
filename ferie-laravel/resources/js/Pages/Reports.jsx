@@ -81,6 +81,19 @@ export default function ReportsPage({
         [remainingByEmployee]
     );
 
+    // Paginazione client-side della sezione "Ferie residue".
+    const RESIDUE_PAGE_SIZE = 12;
+    const [residuePage, setResiduePage] = useState(1);
+    const residueTotalPages = Math.max(1, Math.ceil(remainingByEmployee.length / RESIDUE_PAGE_SIZE));
+    const residuePageSafe = Math.min(residuePage, residueTotalPages);
+    const residuePaged = useMemo(
+        () => remainingByEmployee.slice(
+            (residuePageSafe - 1) * RESIDUE_PAGE_SIZE,
+            residuePageSafe * RESIDUE_PAGE_SIZE
+        ),
+        [remainingByEmployee, residuePageSafe]
+    );
+
     const changeYear = (newYear) =>
         router.get(
             route('admin.reports.index'),
@@ -311,8 +324,9 @@ export default function ReportsPage({
                             Nessun dipendente attivo.
                         </div>
                     ) : (
+                        <>
                         <div style={{ display: 'grid', gap: 10 }}>
-                            {remainingByEmployee.map((e) => {
+                            {residuePaged.map((e) => {
                                 const allocated = e.allocated || 0;
                                 const usedPct = allocated > 0 ? Math.min(1, e.used / allocated) : 0;
                                 const remainingFraction = allocated > 0 ? e.remaining / allocated : 0;
@@ -355,6 +369,30 @@ export default function ReportsPage({
                                 );
                             })}
                         </div>
+                        {residueTotalPages > 1 && (
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginTop: 16, fontSize: 12.5 }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setResiduePage((p) => Math.max(1, p - 1))}
+                                    disabled={residuePageSafe <= 1}
+                                    style={{ border: '1px solid var(--h-line)', background: 'transparent', padding: '4px 12px', opacity: residuePageSafe <= 1 ? 0.4 : 1, cursor: residuePageSafe <= 1 ? 'default' : 'pointer' }}
+                                >
+                                    ‹ Prec
+                                </button>
+                                <span className="h-muted h-mono" style={{ fontSize: 11 }}>
+                                    Pagina {residuePageSafe} di {residueTotalPages}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => setResiduePage((p) => Math.min(residueTotalPages, p + 1))}
+                                    disabled={residuePageSafe >= residueTotalPages}
+                                    style={{ border: '1px solid var(--h-line)', background: 'transparent', padding: '4px 12px', opacity: residuePageSafe >= residueTotalPages ? 0.4 : 1, cursor: residuePageSafe >= residueTotalPages ? 'default' : 'pointer' }}
+                                >
+                                    Succ ›
+                                </button>
+                            </div>
+                        )}
+                        </>
                     )}
                 </section>
 

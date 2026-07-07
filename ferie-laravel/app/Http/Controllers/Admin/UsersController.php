@@ -27,7 +27,6 @@ class UsersController extends Controller
         $approvedUsedDaysByUser = LeaveRequest::sumDeductibleApprovedDaysByUserForYear($year);
 
         $users = User::where('active', true)
-            ->where('role', '!=', 'admin')
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get()
@@ -72,6 +71,12 @@ class UsersController extends Controller
         $user->role = 'user';
         $user->active = true;
         $user->save();
+
+        // Budget ferie di default per l'anno corrente.
+        LeaveBalance::firstOrCreate(
+            ['user_id' => $user->id, 'year' => now()->year],
+            ['allocated_days' => LeaveBalance::DEFAULT_ALLOCATED_DAYS, 'used_days' => 0],
+        );
 
         try {
             $user->notify(new WelcomeNotification($user, createdByAdmin: true));

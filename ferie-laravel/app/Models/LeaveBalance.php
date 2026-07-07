@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LeaveBalance extends Model
 {
+    /** Giorni di ferie assegnati di default a ogni utente per l'anno. */
+    public const DEFAULT_ALLOCATED_DAYS = 26;
+
     protected $fillable = [
         'user_id',
         'year',

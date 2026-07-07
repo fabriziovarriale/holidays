@@ -119,9 +119,6 @@ export default function Login({ status, canResetPassword, ssoBbosEnabled }) {
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 6 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12.5 }}>
-                        <Link href={route('register')} style={linkStyle}>
-                            Registrati
-                        </Link>
                         {canResetPassword && (
                             <Link href={route('password.request')} style={linkStyle}>
                                 Password dimenticata?

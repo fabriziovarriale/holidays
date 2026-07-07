@@ -182,7 +182,6 @@ class ReportController extends Controller
             fputcsv($file, $headers);
 
             $users = User::where('active', true)
-                ->where('role', '!=', 'admin')
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get();

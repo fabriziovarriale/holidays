@@ -109,7 +109,6 @@ class RequestsController extends Controller
         $employeesWithBalances = [];
         if ($isAdmin) {
             $employeesCollection = User::where('active', true)
-                ->where('role', '!=', 'admin')
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get();

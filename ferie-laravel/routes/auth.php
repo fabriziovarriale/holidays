@@ -7,16 +7,16 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\SsoLoginController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
-
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    /*
+     * Registrazione pubblica disattivata: bbos è la fonte di verità degli
+     * utenti (provisioning JIT via SSO). Gli account si creano solo via
+     * login bbos o dall'admin (/admin/users, per test interni).
+     */
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
@@ -34,14 +34,20 @@ Route::middleware('guest')->group(function () {
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->name('password.store');
-
-    /* SSO via bbos */
-    Route::get('auth/bbos/redirect', [SsoLoginController::class, 'redirect'])
-        ->name('sso.bbos.redirect');
-
-    Route::get('auth/bbos/callback', [SsoLoginController::class, 'callback'])
-        ->name('sso.bbos.callback');
 });
+
+/*
+ * SSO via bbos. Entrambe le rotte sono fuori dai gruppi guest/auth: il flusso
+ * parte da bbos (fonte di verità dell'identità) e deve funzionare anche se sei
+ * già loggato su Holidays. Passiamo sempre da bbos e, se l'utente bbos è
+ * diverso da quello in sessione qui, il callback cambia identità (eri Rossi →
+ * diventi Bianchi).
+ */
+Route::get('auth/bbos/redirect', [SsoLoginController::class, 'redirect'])
+    ->name('sso.bbos.redirect');
+
+Route::get('auth/bbos/callback', [SsoLoginController::class, 'callback'])
+    ->name('sso.bbos.callback');
 
 Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
